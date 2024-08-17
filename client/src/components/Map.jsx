@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { GoogleMap, LoadScript, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import './map.css';
-import { GoogleLogin } from '../firebase';
+import { GoogleLogin, GoogleLogout } from '../firebase';
+import { set } from 'mongoose';
 
 const markerColors = [
   'red', 'blue', 'green', 'purple', 'orange',
@@ -33,7 +34,8 @@ const Map = () => {
   const [showCircles, setShowCircles] = useState(true);
   const [travelMode, setTravelMode] = useState('DRIVING');
   const [circles, setCircles] = useState([]);
-  const [user, setUser] = useState(null);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [disableLogin, setDisableLogin] = useState(false);
   const [filters, setFilters] = useState({
     showFood: true,
     showParks: true,
@@ -180,16 +182,28 @@ const Map = () => {
   };
 
   const handleLogin = async () => {
-    console.log("Login button clicked");
-
+    setDisableLogin(true);
+  if (loggedIn) {
     try {
-      let result = await GoogleLogin();
-      console.log(result);
+      await GoogleLogout();
+      setLoggedIn(false);
     }
     catch (error) {
       console.log(error);
     }
+  }
+  else{
+    try {
+      let result = await GoogleLogin();
+      console.log(result);
+      setLoggedIn(true);
+    }
+    catch (error) {
+      console.log(error);
+    }
+    setDisableLogin(false);
   };
+}
 
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_API}>
@@ -246,7 +260,7 @@ const Map = () => {
           </div>
         </div>
         <div className="top-right-controls">
-          <button className="login-btn" onClick={handleLogin}>Login</button>
+          <button className="login-btn"  disabled={disableLogin} onClick={handleLogin}>{ loggedIn ? "Logout"  : "Login"}</button>
         </div>
         <GoogleMap
           mapContainerStyle={{ width: '100%', height: '100%' }}
