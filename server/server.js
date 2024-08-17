@@ -98,7 +98,17 @@ app.get('/api/restaurants/all', async (req, res) => {
  });
 
 // Delete a restaurant
-app.post('/api/restaurants/delete', async (req, res) => { });
+app.get('/api/restaurants/delete/:id', async (req, res) => {
+	const id = req.params.id;
+	try{
+		let result = await DB.collection('restaurants').deleteOne({id: id});
+		res.status(200).json({ message: 'Restaurant deleted successfully' });
+	}
+	catch(err){
+		res.status(500).json({ error: 'Failed to delete restaurant', err: err });
+	}
+	
+ });
 
 
 
