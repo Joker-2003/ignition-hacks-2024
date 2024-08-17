@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { GoogleMap, LoadScript, Marker, DirectionsRenderer } from '@react-google-maps/api';
-import './map.css'; 
+import './map.css'; // Import your CSS file
 
 const containerStyle = {
   width: '100%',
@@ -190,7 +190,6 @@ const Map = () => {
     return userLocation ? generateMarkers(userLocation) : [];
   }, [userLocation]);
 
- 
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_API}>
       <div className="panel">
@@ -204,7 +203,7 @@ const Map = () => {
         <button onClick={() => { setTravelMode('WALKING'); }}>Walking Directions</button>
         {selectedMarker && (
           <div>
-            <h4>{selectedMarker.label}</h4>
+            <h4 className="marker-label">{selectedMarker.label}</h4>
             <button onClick={() => getDirections()}>Get Directions</button>
           </div>
         )}
@@ -234,7 +233,11 @@ const Map = () => {
             <Marker
               key={marker.id}
               position={marker.position}
-              label={marker.label}
+              label={
+                <span className={marker.id === selectedMarker?.id ? 'highlighted-label marker-label' : 'marker-label'}>
+                  {marker.label}
+                </span>
+              }
               icon={{
                 path: window.google.maps.SymbolPath.CIRCLE,
                 scale: 10,
