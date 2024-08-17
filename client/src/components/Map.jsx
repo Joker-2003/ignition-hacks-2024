@@ -37,8 +37,8 @@ const generateMarkers = (userLocation) => {
   return Array.from({ length: 20 }, (_, index) => ({
     id: index + 1,
     position: {
-      lat: userLocation.lat + (Math.random() - 0.5) * 0.05, // Adjust range as needed
-      lng: userLocation.lng + (Math.random() - 0.5) * 0.05, // Adjust range as needed
+      lat: userLocation.lat + (Math.random() - 0.5) * 0.05, 
+      lng: userLocation.lng + (Math.random() - 0.5) * 0.05, 
     },
     label: `Food ${index + 1}`,
     color: markerColors[index % markerColors.length]
@@ -53,7 +53,8 @@ const Map = () => {
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [directionDetails, setDirectionDetails] = useState('');
   const [showCircles, setShowCircles] = useState(true);
-  const [travelMode, setTravelMode] = useState('DRIVING'); // 'DRIVING' or 'WALKING'
+  const [travelMode, setTravelMode] = useState('DRIVING'); 
+  const [circles, setCircles] = useState([]); 
 
   const mapRef = useRef(null);
 
@@ -70,6 +71,7 @@ const Map = () => {
           setUserLocation(userPos);
           if (mapRef.current) {
             mapRef.current.panTo(userPos);
+            mapRef.current.setZoom(15); // Set zoom level when centering on user location
           }
         },
         () => null
@@ -121,7 +123,7 @@ const Map = () => {
         }
       );
 
-      // Fetch walking route
+     
       directionsService.route(
         {
           origin: userLocation,
@@ -152,19 +154,16 @@ const Map = () => {
     }
   }, [selectedPOI, travelMode]);
 
-  const markers = useMemo(() => {
-    return userLocation ? generateMarkers(userLocation) : [];
-  }, [userLocation]);
-
   useEffect(() => {
     if (map && userLocation && showCircles) {
-      const circleOptions = [
+      // Remove old circles
+      circles.forEach(circle => circle.setMap(null));
+      
+      const newCircles = [
         { radius: 2000, color: '#ff0000', label: '0-2km' },
         { radius: 4000, color: '#00ff00', label: '2-4km' },
         { radius: 10000, color: '#0000ff', label: '4-10km' }
-      ];
-
-      circleOptions.forEach(({ radius, color, label }) => {
+      ].map(({ radius, color, label }) => 
         new window.google.maps.Circle({
           center: userLocation,
           radius: radius,
@@ -175,10 +174,20 @@ const Map = () => {
           fillOpacity: 0.15,
           zIndex: -1,
           map: map,
-        });
-      });
+        })
+      );
+      
+      setCircles(newCircles); 
+    }
+    if (!showCircles) { 
+      circles.forEach(circle => circle.setMap(null)); 
+      setCircles([]); 
     }
   }, [map, userLocation, showCircles]);
+
+  const markers = useMemo(() => {
+    return userLocation ? generateMarkers(userLocation) : [];
+  }, [userLocation]);
 
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_API}>
@@ -230,30 +239,10 @@ const Map = () => {
             />
           ))}
           {(travelMode === 'DRIVING' && directions.driving) && (
-            <DirectionsRenderer
-              directions={directions.driving}
-              options={{
-                polylineOptions: {
-                  strokeColor: '#0000FF',
-                  strokeWeight: 5,
-                },
-                suppressMarkers: true,
-              }}
-              style={{ zIndex: 10000 }} 
-            />
+            <DirectionsRenderer directions={directions.driving} />
           )}
           {(travelMode === 'WALKING' && directions.walking) && (
-            <DirectionsRenderer
-              directions={directions.walking}
-              options={{
-                polylineOptions: {
-                  strokeColor: '#FF0000',
-                  strokeWeight: 5,
-                },
-                suppressMarkers: true,
-              }}
-              style={{ zIndex: 10000 }} 
-            />
+            <DirectionsRenderer directions={directions.walking} />
           )}
         </GoogleMap>
       </div>
