@@ -152,3 +152,8 @@
 	display: block;
   }
   
+  .btn-danger {
+	background-color: #dc3545;
+	color: white;
+  }
+  

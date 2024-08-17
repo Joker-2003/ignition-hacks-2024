@@ -28,3 +28,21 @@ export const fetchAllRestaurants = async () => {
 		throw error;
 	}
 };
+
+export const bookSlot = async (userId, restaurantId) => {
+	try {
+		const response = await axios.post(`${URL}/api/users/booking/add`, { userId, restaurantId });
+		return response.data;
+	} catch (error) {
+		throw error;
+	}
+}
+
+export const removeBooking = async (userId, restaurantId) => {
+	try {
+		const response = await axios.post(`${URL}/api/users/booking/remove`, { userId, restaurantId });
+		return response.data;
+	} catch (error) {
+		throw error;
+	}
+}

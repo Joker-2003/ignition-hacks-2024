@@ -32,11 +32,13 @@ const Map = () => {
   const [filters, setFilters] = useState({
     halal: false,
     vegetarian: false,
+    userBooking: false,
   });
   const [restaurants, setRestaurants] = useState([]);
   const [user, setUser] = useGlobalState('user');
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
   const [markers, setMarkers] = useState([]);
+  const[fetchAllRestaurants, setFetchAllRestaurants] = useState(0);
 
   const mapRef = useRef(null);
   const navigate = useNavigate();
@@ -65,23 +67,32 @@ const Map = () => {
   useEffect(() => {
     console.log(filters);
     console.log("res", restaurants);
-    if (filters.halal || filters.vegetarian) {
-      setFilteredRestaurants(
-        restaurants.filter((restaurant) => {
-          if (filters.halal && !restaurant.dietaryOptions.isHalal) {
-            return false;
-          }
-          if (filters.vegetarian && !restaurant.dietaryOptions.isVegetarian) {
-            return false;
-          }
-          generateMarkers(restaurant, setMarkers);
-          return true;
-        })
+    if (filters.halal || filters.vegetarian || filters.userBooking) {
+      let filtered = restaurants.filter((restaurant) => {
+        return (
+          (!filters.halal || restaurant.dietaryOptions.isHalal) &&
+          (!filters.vegetarian || restaurant.dietaryOptions.isVegetarian) &&
+          (!filters.userBooking || (user && user.bookings.includes(restaurant.id)))
+        );
+      });
+      setFilteredRestaurants(filtered);
+      filtered.forEach((restaurant) => {
+        generateMarkers(restaurant, setMarkers);
+        if (user.bookings.includes(restaurant.id)) {
+          restaurant.color = 'green';
+          restaurant.booked = true;
+        }
+      }
       );
-    } else {
+    }
+    else {
       setFilteredRestaurants(restaurants);
       restaurants.forEach((restaurant) => {
         generateMarkers(restaurant, setMarkers);
+        if (user.bookings.includes(restaurant.id)) {
+          restaurant.color = 'green';
+          restaurant.booked = true;
+        }
       }
       );
     }
@@ -95,7 +106,7 @@ const Map = () => {
       setRestaurants(res.restaurants);
     }
     fetchData();
-  }, []);
+  }, [fetchAllRestaurants]);
 
   const onLoad = (map) => {
     setMap(map);
@@ -110,21 +121,21 @@ const Map = () => {
   };
 
 
-const generateMarkers = (restaurant, setMarkers) => {
-  return  setMarkers((prev) => [
-  ...prev,
-  {
-    id: restaurant.id,
-    position: {
-      lat: parseFloat(restaurant.location.latitude),
-      lng: parseFloat(restaurant.location.longitude),
-    },
-    label: restaurant.name,
-    color: 'blue', 
-  },
-]);
+  const generateMarkers = (restaurant, setMarkers) => {
+    return setMarkers((prev) => [
+      ...prev,
+      {
+        id: restaurant.id,
+        position: {
+          lat: parseFloat(restaurant.location.latitude),
+          lng: parseFloat(restaurant.location.longitude),
+        },
+        label: restaurant.name,
+        color: 'blue',
+      },
+    ]);
 
-};
+  };
   const handleMarkerClick = (marker) => {
     setSelectedMarker(marker);
     setSelectedPOI(marker.position);
@@ -282,64 +293,84 @@ const generateMarkers = (restaurant, setMarkers) => {
       distance,
       bookingCount,
       quantity,
-      hours,
+      hours, booked
     } = formData;
 
     const handleDirectionsClick = () => {
       if (userLocation && location) {
-      const directionsService = new window.google.maps.DirectionsService();
-      
-      const givenLocation = {
-        lat: parseFloat(location.latitude),
-        lng: parseFloat(location.longitude),
-      };
-      // Fetch driving route
-      directionsService.route(
-        {
-          origin: userLocation,
-          destination: givenLocation,
-          travelMode: window.google.maps.TravelMode.DRIVING,
-        },
-        (result, status) => {
-          if (status === window.google.maps.DirectionsStatus.OK) {
-            setDirections((prev) => ({
-              ...prev,
-              driving: result
-            }));
-            if (travelMode === 'DRIVING') {
-              const { distance, duration } = result.routes[0].legs[0];
-              setDirectionDetails(`Driving - Distance: ${distance.text}, Duration: ${duration.text}`);
+        const directionsService = new window.google.maps.DirectionsService();
+
+        const givenLocation = {
+          lat: parseFloat(location.latitude),
+          lng: parseFloat(location.longitude),
+        };
+        // Fetch driving route
+        directionsService.route(
+          {
+            origin: userLocation,
+            destination: givenLocation,
+            travelMode: window.google.maps.TravelMode.DRIVING,
+          },
+          (result, status) => {
+            if (status === window.google.maps.DirectionsStatus.OK) {
+              setDirections((prev) => ({
+                ...prev,
+                driving: result
+              }));
+              if (travelMode === 'DRIVING') {
+                const { distance, duration } = result.routes[0].legs[0];
+                setDirectionDetails(`Driving - Distance: ${distance.text}, Duration: ${duration.text}`);
+              }
+            } else {
+              console.error(`Error fetching driving directions ${result}`);
             }
-          } else {
-            console.error(`Error fetching driving directions ${result}`);
           }
-        }
-      );
+        );
 
 
-      directionsService.route(
-        {
-          origin: userLocation,
-          destination: givenLocation,
-          travelMode: window.google.maps.TravelMode.WALKING,
-        },
-        (result, status) => {
-          if (status === window.google.maps.DirectionsStatus.OK) {
-            setDirections((prev) => ({
-              ...prev,
-              walking: result
-            }));
-            if (travelMode === 'WALKING') {
-              const { distance, duration } = result.routes[0].legs[0];
-              setDirectionDetails(`Walking - Distance: ${distance.text}, Duration: ${duration.text}`);
+        directionsService.route(
+          {
+            origin: userLocation,
+            destination: givenLocation,
+            travelMode: window.google.maps.TravelMode.WALKING,
+          },
+          (result, status) => {
+            if (status === window.google.maps.DirectionsStatus.OK) {
+              setDirections((prev) => ({
+                ...prev,
+                walking: result
+              }));
+              if (travelMode === 'WALKING') {
+                const { distance, duration } = result.routes[0].legs[0];
+                setDirectionDetails(`Walking - Distance: ${distance.text}, Duration: ${duration.text}`);
+              }
+            } else {
+              console.error(`Error fetching walking directions ${result}`);
             }
-          } else {
-            console.error(`Error fetching walking directions ${result}`);
           }
-        }
-      );
+        );
+      }
     }
-    }
+
+    handleCancelBooking = async () => {
+      if (loggedIn) {
+        console.log("Cancel Booking");
+      }
+      else {
+        await handleLogin();
+        console.log("Cancel Booking");
+      }
+     };
+
+    handleBookNow = async () => { 
+      if (loggedIn) {
+        console.log("Book Now");
+      }
+      else {
+        await handleLogin();
+        console.log("Book Now");
+      }
+    };
 
     return (
       <div className="restaurant-card-brief">
@@ -352,7 +383,10 @@ const generateMarkers = (restaurant, setMarkers) => {
         <p><strong>Quantity:</strong> {quantity}</p>
         <p><strong>Distribution Hours:</strong> {hours.start} - {hours.end}</p>
         <div className="buttons">
-          <button className="btn btn-primary">Book Now</button>
+          {booked ?
+            <button onClick={handleCancelBooking} className="btn btn-danger">Cancel Booking</button>
+            :
+            <button onClick={handleBookNow} className="btn btn-primary">Book Now</button>}
           <button className="btn btn-secondary" onClick={handleDirectionsClick}>Get Directions</button>
         </div>
       </div>
@@ -415,6 +449,16 @@ const generateMarkers = (restaurant, setMarkers) => {
                 />
                 Vegetarian
               </label>
+              {loggedIn &&
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={filters.userBooking}
+                    onChange={() => handleFilterChange('userBooking')}
+                  />
+                  User Booking
+                </label>
+              }
             </div>
           </div>
         </div>
@@ -444,10 +488,16 @@ const generateMarkers = (restaurant, setMarkers) => {
             <Marker
               key={marker.id}
               position={marker.position}
-              label={
-                  marker.label
+              label={{
+                text: marker.label,
+                fontSize: '24px',  // Increase the font size here
+                backgroundColor: 'white',
+              }}
+              icon={
+                {
+                  url: `http://maps.google.com/mapfiles/ms/icons/${marker.color}-dot.png`,
+                }
               }
-              
               color={marker.color}
               onClick={() => handleMarkerClick(marker)}
             />
