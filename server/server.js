@@ -88,7 +88,13 @@ app.get('/api/restaurants/:id', async (req, res) => {
 
 // Get all restaurants
 app.get('/api/restaurants/all', async (req, res) => {
-	
+	try{
+		let result = await DB.collection('restaurants').find().toArray();
+		res.status(200).json({ message: 'Restaurants found', restaurants: result });
+	}
+	catch(err){
+		res.status(500).json({ error: 'Failed to find restaurants', err: err });
+	}
  });
 
 // Delete a restaurant
