@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
+import { GoogleMap, useLoadScript, Autocomplete } from '@react-google-maps/api';
 import './restaurantSignup.css';
 
+const libraries = ['places'];
 export default function RestaurantSignUp() {
   const [formData, setFormData] = useState({
     id: '',
@@ -14,7 +16,30 @@ export default function RestaurantSignUp() {
     quantity: 0,
     hours: { start: '', end: '' },
     menu: [{ name: '' }],
+    address: '',
   });
+
+  const autocompleteRef = useRef(null);
+
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_API,
+    libraries,
+  });
+
+  const onPlaceChanged = useCallback(() => {
+    const place = autocompleteRef.current.getPlace();
+    if (place.geometry) {
+      const { lat, lng } = place.geometry.location;
+      setFormData((prevData) => ({
+        ...prevData,
+        address: place.formatted_address,  // Update address field with the selected place's formatted address
+        location: {
+          latitude: lat(),
+          longitude: lng(),
+        },
+      }));
+    }
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value, checked, type } = e.target;
@@ -68,8 +93,12 @@ export default function RestaurantSignUp() {
       quantity: 0,
       hours: { start: '', end: '' },
       menu: [{ name: '' }],
+      address: '',
     });
   };
+
+  if (loadError) return <div>Error loading Google Maps</div>;
+  if (!isLoaded) return <div>Loading...</div>;
 
   return (
     <div className="container">
@@ -87,57 +116,132 @@ export default function RestaurantSignUp() {
         </div>
 
         <div className="form-group">
+          <label>Address:</label>
+          <Autocomplete
+            onLoad={(ref) => (autocompleteRef.current = ref)}
+            onPlaceChanged={onPlaceChanged}
+          >
+            <input
+              type="text"
+              name="address"
+              value={formData.address}
+              onChange={handleInputChange}
+              placeholder="Enter address"
+              required
+            />
+          </Autocomplete>
+        </div>
+
+        <div className="form-group">
           <label>Longitude:</label>
-          <input type="text" name="location.longitude" value={formData.location.longitude} onChange={handleInputChange} required />
+          <input
+            type="text"
+            name="location.longitude"
+            value={formData.location.longitude}
+            onChange={handleInputChange}
+            required
+          />
         </div>
 
         <div className="form-group">
           <label>Latitude:</label>
-          <input type="text" name="location.latitude" value={formData.location.latitude} onChange={handleInputChange} required />
+          <input
+            type="text"
+            name="location.latitude"
+            value={formData.location.latitude}
+            onChange={handleInputChange}
+            required
+          />
         </div>
 
         <div className="form-group">
           <label>Cuisine:</label>
-          <input type="text" name="cuisine" value={formData.cuisine} onChange={handleInputChange} required />
+          <input
+            type="text"
+            name="cuisine"
+            value={formData.cuisine}
+            onChange={handleInputChange}
+            required
+          />
         </div>
 
         <div className="form-group">
           <label>Phone:</label>
-          <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} required />
+          <input
+            type="text"
+            name="phone"
+            value={formData.phone}
+            onChange={handleInputChange}
+            required
+          />
         </div>
 
         <div className="form-group">
           <label>Booking Count:</label>
-          <input type="number" name="bookingCount" value={formData.bookingCount} onChange={handleInputChange} required />
+          <input
+            type="number"
+            name="bookingCount"
+            value={formData.bookingCount}
+            onChange={handleInputChange}
+            required
+          />
         </div>
 
         <div className="form-group">
           <label>
-            <input type="checkbox" name="dietaryOptions.isHalal" checked={formData.dietaryOptions.isHalal} onChange={handleInputChange} />
+            <input
+              type="checkbox"
+              name="dietaryOptions.isHalal"
+              checked={formData.dietaryOptions.isHalal}
+              onChange={handleInputChange}
+            />
             Halal
           </label>
         </div>
 
         <div className="form-group">
           <label>
-            <input type="checkbox" name="dietaryOptions.isVegetarian" checked={formData.dietaryOptions.isVegetarian} onChange={handleInputChange} />
+            <input
+              type="checkbox"
+              name="dietaryOptions.isVegetarian"
+              checked={formData.dietaryOptions.isVegetarian}
+              onChange={handleInputChange}
+            />
             Vegetarian
           </label>
         </div>
 
         <div className="form-group">
           <label>Quantity:</label>
-          <input type="number" name="quantity" value={formData.quantity} onChange={handleInputChange} required />
+          <input
+            type="number"
+            name="quantity"
+            value={formData.quantity}
+            onChange={handleInputChange}
+            required
+          />
         </div>
 
         <div className="form-group">
           <label>Operating Hours (Start):</label>
-          <input type="time" name="hours.start" value={formData.hours.start} onChange={handleInputChange} required />
+          <input
+            type="time"
+            name="hours.start"
+            value={formData.hours.start}
+            onChange={handleInputChange}
+            required
+          />
         </div>
 
         <div className="form-group">
           <label>Operating Hours (End):</label>
-          <input type="time" name="hours.end" value={formData.hours.end} onChange={handleInputChange} required />
+          <input
+            type="time"
+            name="hours.end"
+            value={formData.hours.end}
+            onChange={handleInputChange}
+            required
+          />
         </div>
 
         <div className="form-group">
@@ -159,6 +263,7 @@ export default function RestaurantSignUp() {
 
         <button type="submit" className="submit-btn">Save Restaurant</button>
       </form>
+      
     </div>
   );
 }

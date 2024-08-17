@@ -10,3 +10,12 @@ export const UserLogin = async (email, id) => {
 		throw error;
 	}
 };
+
+export const addRestaurant = async (restaurant) => {
+	try {
+		const response = await axios.post(`${URL}/api/restaurants/create`, restaurant);
+		return response.data;
+	} catch (error) {
+		throw error;
+	}
+}
