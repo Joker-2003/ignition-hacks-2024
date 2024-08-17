@@ -89,6 +89,7 @@ app.get('/api/users/:id', async (req, res) => {
 // Create a new restaurant
 app.post('/api/restaurants/create', async (req, res) => {
 	const { userid, name, location, phone, cuisine, address, hours, menu, bookingCount, dietaryOptions, quantity } = req.body;
+	console.log(req.body);
 	const id = Math.random().toString(36).substr(2, 9);
 	let restaurant = new RestaurantSchema({
 		id: id,
@@ -153,7 +154,7 @@ app.get('/api/restaurants/:id', async (req, res) => {
 });
 
 // Get all restaurants
-app.get('/api/restaurants/all', async (req, res) => {
+app.post('/api/restaurants/all', async (req, res) => {
 	console.log('Finding restaurants');
 	try {
 		console.log('Finding restaurants');
