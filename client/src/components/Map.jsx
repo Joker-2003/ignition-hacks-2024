@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { GoogleMap, LoadScript, Marker, DirectionsRenderer } from '@react-google-maps/api';
-import './map.css'; 
+import './map.css';
 import { GoogleLogin } from '../firebase';
 
 const markerColors = [
@@ -15,8 +15,8 @@ const generateMarkers = (userLocation) => {
   return Array.from({ length: 20 }, (_, index) => ({
     id: index + 1,
     position: {
-      lat: userLocation.lat + (Math.random() - 0.5) * 0.05, 
-      lng: userLocation.lng + (Math.random() - 0.5) * 0.05, 
+      lat: userLocation.lat + (Math.random() - 0.5) * 0.05,
+      lng: userLocation.lng + (Math.random() - 0.5) * 0.05,
     },
     label: `Food ${index + 1}`,
     color: markerColors[index % markerColors.length]
@@ -31,8 +31,8 @@ const Map = () => {
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [directionDetails, setDirectionDetails] = useState('');
   const [showCircles, setShowCircles] = useState(true);
-  const [travelMode, setTravelMode] = useState('DRIVING'); 
-  const [circles, setCircles] = useState([]); 
+  const [travelMode, setTravelMode] = useState('DRIVING');
+  const [circles, setCircles] = useState([]);
   const [user, setUser] = useState(null);
   const [filters, setFilters] = useState({
     showFood: true,
@@ -106,7 +106,7 @@ const Map = () => {
         }
       );
 
-     
+
       directionsService.route(
         {
           origin: userLocation,
@@ -141,12 +141,12 @@ const Map = () => {
     if (map && userLocation && showCircles) {
       // Remove old circles
       circles.forEach(circle => circle.setMap(null));
-      
+
       const newCircles = [
         { radius: 2000, color: '#ff0000', label: '0-2km' },
         { radius: 4000, color: '#00ff00', label: '2-4km' },
         { radius: 10000, color: '#0000ff', label: '4-10km' }
-      ].map(({ radius, color, label }) => 
+      ].map(({ radius, color, label }) =>
         new window.google.maps.Circle({
           center: userLocation,
           radius: radius,
@@ -159,12 +159,12 @@ const Map = () => {
           map: map,
         })
       );
-      
-      setCircles(newCircles); 
+
+      setCircles(newCircles);
     }
-    if (!showCircles) { 
-      circles.forEach(circle => circle.setMap(null)); 
-      setCircles([]); 
+    if (!showCircles) {
+      circles.forEach(circle => circle.setMap(null));
+      setCircles([]);
     }
   }, [map, userLocation, showCircles]);
 
@@ -179,12 +179,12 @@ const Map = () => {
     }));
   };
 
-  const handleLogin = async () => { 
+  const handleLogin = async () => {
     console.log("Login button clicked");
-  
-    try{
-    let result = await GoogleLogin();
-    console.log(result);
+
+    try {
+      let result = await GoogleLogin();
+      console.log(result);
     }
     catch (error) {
       console.log(error);
