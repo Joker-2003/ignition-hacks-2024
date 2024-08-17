@@ -65,3 +65,5 @@ const RestaurantSchema = new Schema({
 	}]
 
 });
+
+module.exports = mongoose.model('Restaurant', RestaurantSchema);

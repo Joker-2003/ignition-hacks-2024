@@ -2,12 +2,17 @@ const express = require('express');
 const app = express();
 const port = 5001;
 require('dotenv').config();
+const db = require('./db');
+const cors = require('cors');
+const nanoid = require('nanoid');
+const RestaurantSchema = require('./Schema/Restaurant.Schema');
 
 app.use(express.json());
 
+let DB;
 
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+	res.send('Hello World!');
 });
 
 /***************************  USER  *****************************/
@@ -16,26 +21,59 @@ app.get('/', (req, res) => {
 
 
 
- /************************* RESTAURANT ROUTES ***************************/
+/************************* RESTAURANT ROUTES ***************************/
 
- // Create a new restaurant
-app.post('/api/restaurants/create', async (req, res) => {}); 
+// Create a new restaurant
+app.post('/api/restaurants/create', async (req, res) => {
+	const { name, location, phone, cuisine, hours, menu, bookingCount, dietaryOptions, quantity } = req.body;
+	const id = nanoid.nanoid();
+	let restaurant = new RestaurantSchema({
+		id: id,
+		name: name,
+		location: location,
+		phone: phone,
+		cuisine: cuisine,
+		hours: hours,
+		menu: menu,
+		bookingCount: bookingCount,
+		dietaryOptions: dietaryOptions,
+		quantity: quantity
+	});
+
+
+});
 
 // Update an existing restaurant
-app.post('/api/restaurants/update', async (req, res) => {});
+app.post('/api/restaurants/update', async (req, res) => { });
 
 // Get a restaurant by ID
-app.get('/api/restaurants/:id', async (req, res) => {});
+app.get('/api/restaurants/:id', async (req, res) => { });
 
 // Get all restaurants
-app.get('/api/restaurants/all', async (req, res) => {});
+app.get('/api/restaurants/all', async (req, res) => { });
 
 // Delete a restaurant
-app.post('/api/restaurants/delete', async (req, res) => {});
+app.post('/api/restaurants/delete', async (req, res) => { });
 
 
 
+app.listen(port, async () => {
+	try {
+		db.connectToServer();
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}/`);
+		DB = db.getDb();
+		console.log("Connected to MongoDB");
+
+		// Ensure the database is connected before handling requests
+		app.use((req, res, next) => {
+			if (!DB) {
+				return res.status(500).json({ error: 'Database connection not established' });
+			}
+			next();
+		});
+
+		console.log(`Server is running on port ${port}`);
+	} catch (err) {
+		console.error('Failed to connect to MongoDB:', err);
+	}
 });
