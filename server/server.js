@@ -39,15 +39,45 @@ app.post('/api/restaurants/create', async (req, res) => {
 		dietaryOptions: dietaryOptions,
 		quantity: quantity
 	});
+	try{
+		let result = await DB.collection('restaurants').insertOne(restaurant);
+		res.status(200).json({ message: 'Restaurant created successfully', restaurant: restaurant });
+	}
+	catch(err){
+		res.status(500).json({ error: 'Failed to create restaurant', err: err });
+	}
 
 
 });
 
 // Update an existing restaurant
-app.post('/api/restaurants/update', async (req, res) => { });
+app.post('/api/restaurants/update', async (req, res) => { 
+	const { id, name, location, phone, cuisine, hours, menu, bookingCount, dietaryOptions, quantity } = req.body;
+	let restaurant = new RestaurantSchema({
+		id: id,
+		name: name,
+		location: location,
+		phone: phone,
+		cuisine: cuisine,
+		hours: hours,
+		menu: menu,
+		bookingCount: bookingCount,
+		dietaryOptions: dietaryOptions,
+		quantity: quantity
+	});
+	try{
+		let result = await DB.collection('restaurants').updateOne({id: id}, {$set: restaurant});
+		res.status(200).json({ message: 'Restaurant updated successfully', restaurant: restaurant });
+	}
+	catch(err){
+		res.status(500).json({ error: 'Failed to update restaurant', err: err });
+	}
+});
 
 // Get a restaurant by ID
-app.get('/api/restaurants/:id', async (req, res) => { });
+app.get('/api/restaurants/:id', async (req, res) => {
+	
+});
 
 // Get all restaurants
 app.get('/api/restaurants/all', async (req, res) => { });
