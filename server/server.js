@@ -59,6 +59,18 @@ app.post('/api/users/booking/remove', async (req, res) => {
 	}
 })
 
+app.get('/api/users/:id', async (req, res) => {
+	const id = req.params.id;
+	try{
+		let result = await DB.collection('users').findOne({id: id});
+		res.status(200).json({ message: 'User found', user: result });
+	}
+	catch(err){
+		res.status(500).json({ error: 'Failed to find user', err: err });
+	}
+}
+);
+
 
 
 /************************* RESTAURANT ROUTES ***************************/
