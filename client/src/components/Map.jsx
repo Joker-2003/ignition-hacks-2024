@@ -4,7 +4,7 @@ import './map.css';
 import { GoogleLogin, GoogleLogout } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../App';
-import { fetchAllRestaurants, UserLogin } from '../api/api';
+import { bookSlot, fetchAllRestaurants, fetchUser, removeBooking, UserLogin } from '../api/api';
 
 const markerColors = [
   'red', 'blue', 'green', 'purple', 'orange',
@@ -38,7 +38,8 @@ const Map = () => {
   const [user, setUser] = useGlobalState('user');
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
   const [markers, setMarkers] = useState([]);
-  const[fetchAllRestaurants, setFetchAllRestaurants] = useState(0);
+  const [fetchAllRestaurantsFlag, setFetchAllRestaurantsFlag] = useState(0);
+  const [updateFilteredFlag, setUpdateFilteredFlag] = useState(0);
 
   const mapRef = useRef(null);
   const navigate = useNavigate();
@@ -64,6 +65,24 @@ const Map = () => {
     }
   }, []);
 
+
+  useEffect(() => {
+    async function fetchData() {
+      let res = await fetchAllRestaurants();
+      console.log(res);
+      setFilteredRestaurants([]);
+      setRestaurants(res.restaurants);
+      setUpdateFilteredFlag(updateFilteredFlag + 1);
+      setFilters({
+        halal: false,
+        vegetarian: false,
+        userBooking: false,
+      });
+    }
+    fetchData();
+  }, [ fetchAllRestaurantsFlag]);
+
+
   useEffect(() => {
     console.log(filters);
     console.log("res", restaurants);
@@ -72,41 +91,44 @@ const Map = () => {
         return (
           (!filters.halal || restaurant.dietaryOptions.isHalal) &&
           (!filters.vegetarian || restaurant.dietaryOptions.isVegetarian) &&
-          (!filters.userBooking || (user && user.bookings.includes(restaurant.id)))
+          (!filters.userBooking || (loggedIn && user && user.bookings && user.bookings.includes(restaurant.id)))
         );
       });
-      setFilteredRestaurants(filtered);
+      
       filtered.forEach((restaurant) => {
         generateMarkers(restaurant, setMarkers);
-        if (user.bookings.includes(restaurant.id)) {
+        if (loggedIn && user && user.bookings && user.bookings.includes(restaurant.id)) {
           restaurant.color = 'green';
           restaurant.booked = true;
         }
       }
+      
       );
+      setFilteredRestaurants(filtered);
     }
     else {
-      setFilteredRestaurants(restaurants);
+      
       restaurants.forEach((restaurant) => {
         generateMarkers(restaurant, setMarkers);
-        if (user.bookings.includes(restaurant.id)) {
+        console.log(user);
+        if (loggedIn && user && user.bookings && user.bookings.includes(restaurant.id)) {
           restaurant.color = 'green';
           restaurant.booked = true;
         }
       }
+      
       );
+      setFilteredRestaurants(restaurants);
     }
     console.log(filteredRestaurants);
-  }, [filters, restaurants]);
+  }, [filters, restaurants, updateFilteredFlag]);
 
   useEffect(() => {
-    async function fetchData() {
-      let res = await fetchAllRestaurants();
-      console.log(res);
-      setRestaurants(res.restaurants);
+    if (loggedIn) {
+      let res = fetchUser(user.id);
+      setUser(res.user);
     }
-    fetchData();
-  }, [fetchAllRestaurants]);
+  }, [fetchAllRestaurantsFlag])
 
   const onLoad = (map) => {
     setMap(map);
@@ -296,6 +318,9 @@ const Map = () => {
       hours, booked
     } = formData;
 
+    console.log(id, name, address, cuisine, location, phone, distance, bookingCount, quantity, hours, booked);
+
+    const [forceUpdate, setForceUpdate] = useState(false);
     const handleDirectionsClick = () => {
       if (userLocation && location) {
         const directionsService = new window.google.maps.DirectionsService();
@@ -352,24 +377,38 @@ const Map = () => {
       }
     }
 
-    handleCancelBooking = async () => {
+    const handleCancelBooking = async () => {
       if (loggedIn) {
         console.log("Cancel Booking");
+        let res = await removeBooking(user.id, id);
+        console.log(res);
+        setFetchAllRestaurantsFlag(fetchAllRestaurantsFlag + 1);
       }
       else {
         await handleLogin();
         console.log("Cancel Booking");
+        setForceUpdate(!forceUpdate);
       }
-     };
+    };
 
-    handleBookNow = async () => { 
+    const handleBookNow = async () => {
       if (loggedIn) {
         console.log("Book Now");
+        try {
+          let res = await bookSlot(user.id, id);
+          console.log(res);
+          setFetchAllRestaurantsFlag(fetchAllRestaurantsFlag + 1);
+        }
+        catch (err) {
+          console.log(err);
+        }
+
       }
       else {
         await handleLogin();
         console.log("Book Now");
       }
+      setForceUpdate(!forceUpdate);
     };
 
     return (
@@ -384,12 +423,25 @@ const Map = () => {
         <p><strong>Distribution Hours:</strong> {hours.start} - {hours.end}</p>
         <div className="buttons">
           {booked ?
-            <button onClick={handleCancelBooking} className="btn btn-danger">Cancel Booking</button>
+            <button title={!loggedIn ? 'Login to cancel' : ''} disabled={!loggedIn} onClick={handleCancelBooking} className="btn btn-danger">Cancel Booking</button>
             :
-            <button onClick={handleBookNow} className="btn btn-primary">Book Now</button>}
-          <button className="btn btn-secondary" onClick={handleDirectionsClick}>Get Directions</button>
+            (
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <button
+                  onClick={handleBookNow}
+                  disabled={!loggedIn}
+                  className="btn btn-primary"
+                  aria-label="Book Now"
+                >
+                  {loggedIn ? "Book Now" : "Login to Book"}
+                </button>
+
+              </div>
+            )
+          }
+          < button className="btn btn-secondary" onClick={handleDirectionsClick}>Get Directions</button>
         </div>
-      </div>
+      </div >
     );
   };
 

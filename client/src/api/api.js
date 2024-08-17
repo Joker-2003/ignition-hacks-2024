@@ -11,6 +11,15 @@ export const UserLogin = async (email, id) => {
 	}
 };
 
+export const fetchUser = async (id) => {
+	try {
+		const response = await axios.post(`${URL}/api/users`, { id });
+		return response.data;
+	} catch (error) {
+		throw error;
+	}
+};
+
 export const addRestaurant = async (restaurant) => {
 	try {
 		const response = await axios.post(`${URL}/api/restaurants/create`, restaurant);

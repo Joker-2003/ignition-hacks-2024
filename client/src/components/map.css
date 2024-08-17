@@ -46,6 +46,11 @@
 	background-color: #0056b3;
   }
   
+  .panel button:disabled{
+	background-color: #dc3545;
+	color: white;
+  }
+
  
   .directions-details {
 	margin-top: 20px;
@@ -156,4 +161,17 @@
 	background-color: #dc3545;
 	color: white;
   }
-  
+  .btn :disabled{
+	background-color: #dc3545;
+	color: white;
+
+  }
+  .btn-primary :disabled{	
+	background-color: #dc3545;
+	color: white;
+  }
+  .panel button :disabled{
+	background-color: #dc3545;
+	color: white;
+  }
+
