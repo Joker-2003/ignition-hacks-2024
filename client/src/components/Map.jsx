@@ -121,9 +121,9 @@ const Map = () => {
   useEffect(() => {
     if (map && userLocation) {
       const circleOptions = [
-        { radius: 2000, color: '##85e4ed', label: '0-2km' },
-        { radius: 4000, color: '##85eda1', label: '2-4km' },
-        { radius: 10000, color: '##d1ed85', label: '4-10km' }
+        { radius: 2000, color: '#ff0000', label: '0-2km' },
+        { radius: 4000, color: '#00ff00', label: '2-4km' },
+        { radius: 10000, color: '#0000ff', label: '4-10km' }
       ];
 
       circleOptions.forEach(({ radius, color, label }) => {
@@ -135,6 +135,7 @@ const Map = () => {
           strokeWeight: 2,
           fillColor: color,
           fillOpacity: 0.35,
+          zIndex: -1,
           map: map,
         });
       });
@@ -156,36 +157,50 @@ const Map = () => {
         {directionDetails && <div><h4>Directions</h4><p>{directionDetails}</p></div>}
         <div style={{ marginTop: '20px' }}>
           <h4>Legend</h4>
-          <div><span style={{ backgroundColor: '##85e4ed', width: '20px', height: '20px', display: 'inline-block' }}></span> 0-2km</div>
-          <div><span style={{ backgroundColor: '##85eda1', width: '20px', height: '20px', display: 'inline-block' }}></span> 2-4km</div>
-          <div><span style={{ backgroundColor: '##d1ed85', width: '20px', height: '20px', display: 'inline-block' }}></span> 4-10km</div>
+          <div><span style={{ backgroundColor: '#ff0000', width: '20px', height: '20px', display: 'inline-block' }}></span> 0-2km</div>
+          <div><span style={{ backgroundColor: '#00ff00', width: '20px', height: '20px', display: 'inline-block' }}></span> 2-4km</div>
+          <div><span style={{ backgroundColor: '#0000ff', width: '20px', height: '20px', display: 'inline-block' }}></span> 4-10km</div>
         </div>
       </div>
-      <GoogleMap
-        mapContainerStyle={mapContainerStyle}
-        center={userLocation || defaultCenter}
-        zoom={10}
-        onLoad={onLoad}
-        onClick={handleMapClick}
-      >
-        {userLocation && <Marker position={userLocation} label="You" />}
-        {markers.map((marker) => (
-          <Marker
-            key={marker.id}
-            position={marker.position}
-            label={marker.label}
-            icon={{
-              path: window.google.maps.SymbolPath.CIRCLE,
-              scale: 10,
-              fillColor: marker.color,
-              fillOpacity: 0.8,
-              strokeWeight: 0,
-            }}
-            onClick={() => handleMarkerClick(marker)}
-          />
-        ))}
-        {directions && <DirectionsRenderer directions={directions} />}
-      </GoogleMap>
+      <div style={mapContainerStyle}>
+        <GoogleMap
+          mapContainerStyle={{ width: '100%', height: '100%' }}
+          center={userLocation || defaultCenter}
+          zoom={10}
+          onLoad={onLoad}
+          onClick={handleMapClick}
+        >
+          {userLocation && <Marker position={userLocation} label="You" />}
+          {markers.map((marker) => (
+            <Marker
+              key={marker.id}
+              position={marker.position}
+              label={marker.label}
+              icon={{
+                path: window.google.maps.SymbolPath.CIRCLE,
+                scale: 10,
+                fillColor: marker.color,
+                fillOpacity: 0.8,
+                strokeWeight: 0,
+              }}
+              onClick={() => handleMarkerClick(marker)}
+            />
+          ))}
+          {directions && (
+            <DirectionsRenderer
+              directions={directions}
+              options={{
+                polylineOptions: {
+                  strokeColor: '#0000FF',
+                  strokeWeight: 5,
+                },
+                suppressMarkers: true,
+              }}
+              style={{ zIndex: 10000 }} 
+            />
+          )}
+        </GoogleMap>
+      </div>
     </LoadScript>
   );
 };
