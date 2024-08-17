@@ -76,11 +76,20 @@ app.post('/api/restaurants/update', async (req, res) => {
 
 // Get a restaurant by ID
 app.get('/api/restaurants/:id', async (req, res) => {
-	
+	const id = req.params.id;
+	try{
+		let result = await DB.collection('restaurants').findOne({id: id});
+		res.status(200).json({ message: 'Restaurant found', restaurant: result });
+	}
+	catch(err){
+		res.status(500).json({ error: 'Failed to find restaurant', err: err });
+	}
 });
 
 // Get all restaurants
-app.get('/api/restaurants/all', async (req, res) => { });
+app.get('/api/restaurants/all', async (req, res) => {
+	
+ });
 
 // Delete a restaurant
 app.post('/api/restaurants/delete', async (req, res) => { });
