@@ -80,6 +80,7 @@ const Map = () => {
   });
   const [restaurants, setRestaurants] = useState([]);
   const [user, setUser] = useGlobalState('user');
+  const [filteredRestaurants, setFilteredRestaurants] = useState([]);
 
   const mapRef = useRef(null);
   const navigate = useNavigate();
@@ -105,11 +106,32 @@ const Map = () => {
     }
   }, []);
 
+  useEffect(() => {
+    console.log(filters);
+    console.log("res",restaurants);
+    if (filters.halal || filters.vegetarian) {
+      setFilteredRestaurants(
+        restaurants.filter((restaurant) => {
+          if (filters.halal && !restaurant.dietaryOptions.isHalal) {
+            return false;
+          }
+          if (filters.vegetarian && !restaurant.dietaryOptions.isVegetarian) {
+            return false;
+          }
+          return true;
+        })
+      );
+    } else {
+      setFilteredRestaurants(restaurants);
+    }
+    console.log(filteredRestaurants);
+  }, [filters, restaurants]);
+
   useEffect(() => { 
       async function fetchData() {
         let res = await fetchAllRestaurants();
         console.log(res);
-        setRestaurants(res);
+        setRestaurants(res.restaurants);
       }
       fetchData();
   }, []);
@@ -299,6 +321,11 @@ const Map = () => {
           <div><span style={{ backgroundColor: '#ff0000' }}></span> 0-2km</div>
           <div><span style={{ backgroundColor: '#00ff00' }}></span> 2-4km</div>
           <div><span style={{ backgroundColor: '#0000ff' }}></span> 4-10km</div>
+        </div>
+        <div className="restaurant-list">
+          {filteredRestaurants.length &&  filteredRestaurants.map((restaurant) => (
+            <RestaurantCardBrief key={restaurant.id} formData={restaurant} />
+          ))}
         </div>
       </div>
       <div className="map-container">
