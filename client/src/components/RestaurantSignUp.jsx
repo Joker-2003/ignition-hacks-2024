@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './restaurantSignup.css';
 
 export default function RestaurantSignUp() {
   const [formData, setFormData] = useState({
@@ -44,10 +45,17 @@ export default function RestaurantSignUp() {
     }));
   };
 
+  const handleAddMenuItem = () => {
+    setFormData((prevData) => ({
+      ...prevData,
+      menu: [...prevData.menu, { name: '' }],
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Restaurant added:', formData);
-    // Reset form after submission
+    
     setFormData({
       id: '',
       userid: '',
@@ -73,69 +81,69 @@ export default function RestaurantSignUp() {
       </nav>
 
       <form onSubmit={handleSubmit}>
-        <div>
+        <div className="form-group">
           <label>Restaurant Name:</label>
           <input type="text" name="name" value={formData.name} onChange={handleInputChange} required />
         </div>
 
-        <div>
+        <div className="form-group">
           <label>Longitude:</label>
           <input type="text" name="location.longitude" value={formData.location.longitude} onChange={handleInputChange} required />
         </div>
 
-        <div>
+        <div className="form-group">
           <label>Latitude:</label>
           <input type="text" name="location.latitude" value={formData.location.latitude} onChange={handleInputChange} required />
         </div>
 
-        <div>
+        <div className="form-group">
           <label>Cuisine:</label>
           <input type="text" name="cuisine" value={formData.cuisine} onChange={handleInputChange} required />
         </div>
 
-        <div>
+        <div className="form-group">
           <label>Phone:</label>
           <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} required />
         </div>
 
-        <div>
+        <div className="form-group">
           <label>Booking Count:</label>
           <input type="number" name="bookingCount" value={formData.bookingCount} onChange={handleInputChange} required />
         </div>
 
-        <div>
+        <div className="form-group">
           <label>
             <input type="checkbox" name="dietaryOptions.isHalal" checked={formData.dietaryOptions.isHalal} onChange={handleInputChange} />
             Halal
           </label>
         </div>
 
-        <div>
+        <div className="form-group">
           <label>
             <input type="checkbox" name="dietaryOptions.isVegetarian" checked={formData.dietaryOptions.isVegetarian} onChange={handleInputChange} />
             Vegetarian
           </label>
         </div>
 
-        <div>
+        <div className="form-group">
           <label>Quantity:</label>
           <input type="number" name="quantity" value={formData.quantity} onChange={handleInputChange} required />
         </div>
 
-        <div>
+        <div className="form-group">
           <label>Operating Hours (Start):</label>
           <input type="time" name="hours.start" value={formData.hours.start} onChange={handleInputChange} required />
         </div>
 
-        <div>
+        <div className="form-group">
           <label>Operating Hours (End):</label>
           <input type="time" name="hours.end" value={formData.hours.end} onChange={handleInputChange} required />
         </div>
 
-        <div>
+        <div className="form-group">
           <label>Menu Items:</label>
           {formData.menu.map((item, index) => (
-            <div key={index}>
+            <div key={index} className="menu-item">
               <input
                 type="text"
                 value={item.name}
@@ -144,9 +152,12 @@ export default function RestaurantSignUp() {
               />
             </div>
           ))}
+          <button type="button" className="add-menu-btn" onClick={handleAddMenuItem}>
+            Add Menu Item
+          </button>
         </div>
 
-        <button type="submit">Save Restaurant</button>
+        <button type="submit" className="submit-btn">Save Restaurant</button>
       </form>
     </div>
   );
