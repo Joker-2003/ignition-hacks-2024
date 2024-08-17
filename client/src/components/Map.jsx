@@ -108,6 +108,7 @@ const Map = () => {
   useEffect(() => { 
       async function fetchData() {
         let res = await fetchAllRestaurants();
+        console.log(res);
         setRestaurants(res);
       }
       fetchData();

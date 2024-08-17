@@ -22,7 +22,7 @@ export const addRestaurant = async (restaurant) => {
 
 export const fetchAllRestaurants = async () => {
 	try {
-		const response = await axios.get(`${URL}/api/restaurants/all`);
+		const response = await axios.post(`${URL}/api/restaurants/all`);
 		return response.data;
 	} catch (error) {
 		throw error;
