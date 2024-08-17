@@ -15,17 +15,6 @@ const markerColors = [
 ];
 let userPos;
 
-const generateMarkers = (userLocation) => {
-  return Array.from({ length: 20 }, (_, index) => ({
-    id: index + 1,
-    position: {
-      lat: userLocation.lat + (Math.random() - 0.5) * 0.05,
-      lng: userLocation.lng + (Math.random() - 0.5) * 0.05,
-    },
-    label: `Food ${index + 1}`,
-    color: markerColors[index % markerColors.length]
-  }));
-};
 
 
 const Map = () => {
@@ -85,11 +74,16 @@ const Map = () => {
           if (filters.vegetarian && !restaurant.dietaryOptions.isVegetarian) {
             return false;
           }
+          generateMarkers(restaurant, setMarkers);
           return true;
         })
       );
     } else {
       setFilteredRestaurants(restaurants);
+      restaurants.forEach((restaurant) => {
+        generateMarkers(restaurant, setMarkers);
+      }
+      );
     }
     console.log(filteredRestaurants);
   }, [filters, restaurants]);
@@ -115,6 +109,22 @@ const Map = () => {
     });
   };
 
+
+const generateMarkers = (restaurant, setMarkers) => {
+  return  setMarkers((prev) => [
+  ...prev,
+  {
+    id: restaurant.id,
+    position: {
+      lat: parseFloat(restaurant.location.latitude),
+      lng: parseFloat(restaurant.location.longitude),
+    },
+    label: restaurant.name,
+    color: 'blue', 
+  },
+]);
+
+};
   const handleMarkerClick = (marker) => {
     setSelectedMarker(marker);
     setSelectedPOI(marker.position);
@@ -435,17 +445,10 @@ const Map = () => {
               key={marker.id}
               position={marker.position}
               label={
-                <span >
-                  {marker.label}
-                </span>
+                  marker.label
               }
-              icon={{
-                path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-                scale: 10,
-                fillColor: marker.color,
-                fillOpacity: 0.8,
-                strokeWeight: 0,
-              }}
+              
+              color={marker.color}
               onClick={() => handleMarkerClick(marker)}
             />
           ))}
