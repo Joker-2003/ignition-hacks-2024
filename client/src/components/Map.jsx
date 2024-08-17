@@ -49,7 +49,7 @@ const Map = () => {
   const [map, setMap] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [selectedPOI, setSelectedPOI] = useState(null);
-  const [directions, setDirections] = useState(null);
+  const [directions, setDirections] = useState({ driving: null, walking: null });
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [directionDetails, setDirectionDetails] = useState('');
   const [showCircles, setShowCircles] = useState(true);
@@ -97,19 +97,49 @@ const Map = () => {
   const getDirections = () => {
     if (userLocation && selectedPOI) {
       const directionsService = new window.google.maps.DirectionsService();
+
+      // Fetch driving route
       directionsService.route(
         {
           origin: userLocation,
           destination: selectedPOI,
-          travelMode: window.google.maps.TravelMode[travelMode],
+          travelMode: window.google.maps.TravelMode.DRIVING,
         },
         (result, status) => {
           if (status === window.google.maps.DirectionsStatus.OK) {
-            setDirections(result);
+            setDirections((prev) => ({
+              ...prev,
+              driving: result
+            }));
             const { distance, duration } = result.routes[0].legs[0];
-            setDirectionDetails(`Distance: ${distance.text}, Duration: ${duration.text}`);
+            if (travelMode === 'DRIVING') {
+              setDirectionDetails(`${travelMode} - Distance: ${distance.text}, Duration: ${duration.text}`);
+            }
           } else {
-            console.error(`Error fetching directions ${result}`);
+            console.error(`Error fetching driving directions ${result}`);
+          }
+        }
+      );
+
+      // Fetch walking route
+      directionsService.route(
+        {
+          origin: userLocation,
+          destination: selectedPOI,
+          travelMode: window.google.maps.TravelMode.WALKING,
+        },
+        (result, status) => {
+          if (status === window.google.maps.DirectionsStatus.OK) {
+            setDirections((prev) => ({
+              ...prev,
+              walking: result
+            }));
+            const { distance, duration } = result.routes[0].legs[0];
+            if (travelMode === 'WALKING') {
+              setDirectionDetails(`Walking - Distance: ${distance.text}, Duration: ${duration.text}`);
+            }
+          } else {
+            console.error(`Error fetching walking directions ${result}`);
           }
         }
       );
@@ -134,9 +164,9 @@ const Map = () => {
           radius: radius,
           strokeColor: color,
           strokeOpacity: 0.8,
-          strokeWeight: 2,
+          strokeWeight: 1,
           fillColor: color,
-          fillOpacity: 0.35,
+          fillOpacity: 0.15,
           zIndex: -1,
           map: map,
         });
@@ -150,11 +180,11 @@ const Map = () => {
         <button onClick={() => userLocation && mapRef.current && mapRef.current.panTo(userLocation)}>
           Pan to My Location
         </button>
-        {/* <button onClick={() => setShowCircles((prev) => !prev)}>
+        <button onClick={() => setShowCircles((prev) => !prev)}>
           {showCircles ? 'Hide Circles' : 'Show Circles'}
-        </button> */}
-        <button onClick={() => setTravelMode('DRIVING')}>Driving Directions</button>
-        <button onClick={() => setTravelMode('WALKING')}>Walking Directions</button>
+        </button>
+        <button onClick={() => { setTravelMode('DRIVING'); getDirections(); }}>Driving Directions</button>
+        <button onClick={() => { setTravelMode('WALKING'); getDirections(); }}>Walking Directions</button>
         {selectedMarker && (
           <div>
             <h4>{selectedMarker.label}</h4>
@@ -193,12 +223,25 @@ const Map = () => {
               onClick={() => handleMarkerClick(marker)}
             />
           ))}
-          {directions && (
+          {(travelMode === 'DRIVING' && directions.driving) && (
             <DirectionsRenderer
-              directions={directions}
+              directions={directions.driving}
               options={{
                 polylineOptions: {
                   strokeColor: '#0000FF',
+                  strokeWeight: 5,
+                },
+                suppressMarkers: true,
+              }}
+              style={{ zIndex: 10000 }} 
+            />
+          )}
+          {(travelMode === 'WALKING' && directions.walking) && (
+            <DirectionsRenderer
+              directions={directions.walking}
+              options={{
+                polylineOptions: {
+                  strokeColor: '#FF0000',
                   strokeWeight: 5,
                 },
                 suppressMarkers: true,
