@@ -16,6 +16,7 @@ const panelStyle = {
   top: '0',
   left: '0',
   zIndex: '1',
+  overflowY: 'scroll',
 };
 
 const mapContainerStyle = {
@@ -50,10 +51,11 @@ const Map = () => {
   const [selectedPOI, setSelectedPOI] = useState(null);
   const [directions, setDirections] = useState(null);
   const [selectedMarker, setSelectedMarker] = useState(null);
-
-  const defaultCenter = { lat: 37.7749, lng: -122.4194 };
+  const [directionDetails, setDirectionDetails] = useState('');
 
   const mapRef = useRef(null);
+
+  const defaultCenter = { lat: 37.7749, lng: -122.4194 };
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -102,18 +104,42 @@ const Map = () => {
         (result, status) => {
           if (status === window.google.maps.DirectionsStatus.OK) {
             setDirections(result);
+            const { distance, duration } = result.routes[0].legs[0];
+            setDirectionDetails(`Distance: ${distance.text}, Duration: ${duration.text}`);
           } else {
-            console.error(`error fetching directions ${result}`);
+            console.error(`Error fetching directions ${result}`);
           }
         }
       );
     }
   };
 
-  // Memoize markers array
   const markers = useMemo(() => {
     return userLocation ? generateMarkers(userLocation) : [];
   }, [userLocation]);
+
+  useEffect(() => {
+    if (map && userLocation) {
+      const circleOptions = [
+        { radius: 2000, color: '##85e4ed', label: '0-2km' },
+        { radius: 4000, color: '##85eda1', label: '2-4km' },
+        { radius: 10000, color: '##d1ed85', label: '4-10km' }
+      ];
+
+      circleOptions.forEach(({ radius, color, label }) => {
+        new window.google.maps.Circle({
+          center: userLocation,
+          radius: radius,
+          strokeColor: color,
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: color,
+          fillOpacity: 0.35,
+          map: map,
+        });
+      });
+    }
+  }, [map, userLocation]);
 
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_API}>
@@ -127,6 +153,13 @@ const Map = () => {
             <button onClick={getDirections}>Get Directions</button>
           </div>
         )}
+        {directionDetails && <div><h4>Directions</h4><p>{directionDetails}</p></div>}
+        <div style={{ marginTop: '20px' }}>
+          <h4>Legend</h4>
+          <div><span style={{ backgroundColor: '##85e4ed', width: '20px', height: '20px', display: 'inline-block' }}></span> 0-2km</div>
+          <div><span style={{ backgroundColor: '##85eda1', width: '20px', height: '20px', display: 'inline-block' }}></span> 2-4km</div>
+          <div><span style={{ backgroundColor: '##d1ed85', width: '20px', height: '20px', display: 'inline-block' }}></span> 4-10km</div>
+        </div>
       </div>
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
