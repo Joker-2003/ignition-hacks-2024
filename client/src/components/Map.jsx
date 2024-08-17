@@ -1,14 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { GoogleMap, LoadScript, Marker, InfoWindow, DirectionsRenderer } from '@react-google-maps/api';
 
 const containerStyle = {
   width: '100%',
   height: '100vh',
-};
-
-const defaultCenter = {
-  lat: 37.7749, // Default to San Francisco
-  lng: -122.4194,
 };
 
 const panelStyle = {
@@ -29,20 +24,38 @@ const mapContainerStyle = {
   marginLeft: '300px',
 };
 
+const markerColors = [
+  'red', 'blue', 'green', 'purple', 'orange',
+  'brown', 'pink', 'yellow', 'cyan', 'magenta',
+  'grey', 'lime', 'indigo', 'teal', 'coral',
+  'navy', 'aqua', 'fuchsia', 'silver', 'maroon',
+  'olive'
+];
+
+const generateMarkers = (userLocation) => {
+  return Array.from({ length: 20 }, (_, index) => ({
+    id: index + 1,
+    position: {
+      lat: userLocation.lat + (Math.random() - 0.5) * 0.05, // Adjust range as needed
+      lng: userLocation.lng + (Math.random() - 0.5) * 0.05, // Adjust range as needed
+    },
+    label: `Food ${index + 1}`,
+    color: markerColors[index % markerColors.length]
+  }));
+};
+
 const Map = () => {
   const [map, setMap] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [selectedPOI, setSelectedPOI] = useState(null);
   const [directions, setDirections] = useState(null);
+  const [selectedMarker, setSelectedMarker] = useState(null);
+
+  const defaultCenter = { lat: 37.7749, lng: -122.4194 };
 
   const mapRef = useRef(null);
 
-  const onLoad = (map) => {
-    setMap(map);
-    mapRef.current = map;
-  };
-
-  const panToUserLocation = () => {
+  useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -51,11 +64,18 @@ const Map = () => {
             lng: position.coords.longitude,
           };
           setUserLocation(userPos);
-          mapRef.current.panTo(userPos);
+          if (mapRef.current) {
+            mapRef.current.panTo(userPos);
+          }
         },
         () => null
       );
     }
+  }, []);
+
+  const onLoad = (map) => {
+    setMap(map);
+    mapRef.current = map;
   };
 
   const handleMapClick = (event) => {
@@ -63,6 +83,11 @@ const Map = () => {
       lat: event.latLng.lat(),
       lng: event.latLng.lng(),
     });
+  };
+
+  const handleMarkerClick = (marker) => {
+    setSelectedMarker(marker);
+    setSelectedPOI(marker.position);
   };
 
   const getDirections = () => {
@@ -85,26 +110,47 @@ const Map = () => {
     }
   };
 
+  // Memoize markers array
+  const markers = useMemo(() => {
+    return userLocation ? generateMarkers(userLocation) : [];
+  }, [userLocation]);
+
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_API}>
       <div style={panelStyle}>
-        <button onClick={panToUserLocation}>Pan to My Location</button>
-        {selectedPOI && (
+        <button onClick={() => userLocation && mapRef.current && mapRef.current.panTo(userLocation)}>
+          Pan to My Location
+        </button>
+        {selectedMarker && (
           <div>
-            <h4>Point of Interest</h4>
+            <h4>{selectedMarker.label}</h4>
             <button onClick={getDirections}>Get Directions</button>
           </div>
         )}
       </div>
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
-        center={defaultCenter}
+        center={userLocation || defaultCenter}
         zoom={10}
         onLoad={onLoad}
         onClick={handleMapClick}
       >
         {userLocation && <Marker position={userLocation} label="You" />}
-        {selectedPOI && <Marker position={selectedPOI} label="POI" />}
+        {markers.map((marker) => (
+          <Marker
+            key={marker.id}
+            position={marker.position}
+            label={marker.label}
+            icon={{
+              path: window.google.maps.SymbolPath.CIRCLE,
+              scale: 10,
+              fillColor: marker.color,
+              fillOpacity: 0.8,
+              strokeWeight: 0,
+            }}
+            onClick={() => handleMarkerClick(marker)}
+          />
+        ))}
         {directions && <DirectionsRenderer directions={directions} />}
       </GoogleMap>
     </LoadScript>
