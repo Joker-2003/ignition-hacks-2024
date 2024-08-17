@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { GoogleMap, LoadScript, Marker, InfoWindow, DirectionsRenderer } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker, DirectionsRenderer } from '@react-google-maps/api';
 
 const containerStyle = {
   width: '100%',
@@ -111,9 +111,9 @@ const Map = () => {
               ...prev,
               driving: result
             }));
-            const { distance, duration } = result.routes[0].legs[0];
             if (travelMode === 'DRIVING') {
-              setDirectionDetails(`${travelMode} - Distance: ${distance.text}, Duration: ${duration.text}`);
+              const { distance, duration } = result.routes[0].legs[0];
+              setDirectionDetails(`Driving - Distance: ${distance.text}, Duration: ${duration.text}`);
             }
           } else {
             console.error(`Error fetching driving directions ${result}`);
@@ -134,8 +134,8 @@ const Map = () => {
               ...prev,
               walking: result
             }));
-            const { distance, duration } = result.routes[0].legs[0];
             if (travelMode === 'WALKING') {
+              const { distance, duration } = result.routes[0].legs[0];
               setDirectionDetails(`Walking - Distance: ${distance.text}, Duration: ${duration.text}`);
             }
           } else {
@@ -145,6 +145,12 @@ const Map = () => {
       );
     }
   };
+
+  useEffect(() => {
+    if (selectedPOI) {
+      getDirections();
+    }
+  }, [selectedPOI, travelMode]);
 
   const markers = useMemo(() => {
     return userLocation ? generateMarkers(userLocation) : [];
@@ -172,7 +178,7 @@ const Map = () => {
         });
       });
     }
-  }, [map, userLocation]);
+  }, [map, userLocation, showCircles]);
 
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_API}>
@@ -183,12 +189,12 @@ const Map = () => {
         <button onClick={() => setShowCircles((prev) => !prev)}>
           {showCircles ? 'Hide Circles' : 'Show Circles'}
         </button>
-        <button onClick={() => { setTravelMode('DRIVING'); getDirections(); }}>Driving Directions</button>
-        <button onClick={() => { setTravelMode('WALKING'); getDirections(); }}>Walking Directions</button>
+        <button onClick={() => { setTravelMode('DRIVING'); }}>Driving Directions</button>
+        <button onClick={() => { setTravelMode('WALKING'); }}>Walking Directions</button>
         {selectedMarker && (
           <div>
             <h4>{selectedMarker.label}</h4>
-            <button onClick={getDirections}>Get Directions</button>
+            <button onClick={() => getDirections()}>Get Directions</button>
           </div>
         )}
         {directionDetails && <div><h4>Directions</h4><p>{directionDetails}</p></div>}
