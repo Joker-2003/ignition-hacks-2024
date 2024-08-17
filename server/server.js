@@ -49,7 +49,7 @@ app.post('/api/users/login', async (req, res) => {
 app.post('/api/users/booking/add', async (req, res) => {
 	const { userId, restaurantId, restaurantName } = req.body;
 	try {
-		let result = await DB.collection('users').updateOne({ id: userId }, { $push: { bookings: { restaurantId: restaurantId, restaurantName: restaurantName } } });
+		let result = await DB.collection('users').updateOne({ id: userId }, { $push: { bookings: restaurantId} });
 		let result2 = await DB.collection('restaurants').updateOne({ id: restaurantId }, { $inc: { bookingCount: 1 } });
 		res.status(200).json({ message: 'Booking added successfully' });
 	}
@@ -61,7 +61,7 @@ app.post('/api/users/booking/add', async (req, res) => {
 app.post('/api/users/booking/remove', async (req, res) => {
 	const { userId, restaurantId } = req.body;
 	try {
-		let result = await DB.collection('users').updateOne({ id: userId }, { $pull: { bookings: { restaurantId: restaurantId } } });
+		let result = await DB.collection('users').updateOne({ id: userId }, { $pull: { bookings:  restaurantId } });
 		let result2 = await DB.collection('restaurants').updateOne({ id: restaurantId }, { $inc: { bookingCount: -1 } });
 		res.status(200).json({ message: 'Booking removed successfully' });
 	}
@@ -70,8 +70,8 @@ app.post('/api/users/booking/remove', async (req, res) => {
 	}
 })
 
-app.get('/api/users/:id', async (req, res) => {
-	const id = req.params.id;
+app.post('/api/users', async (req, res) => {
+	const { id } = req.body;
 	try {
 		let result = await DB.collection('users').findOne({ id: id });
 		res.status(200).json({ message: 'User found', user: result });

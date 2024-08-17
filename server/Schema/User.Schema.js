@@ -12,18 +12,8 @@ const UserSchema = new Schema({
 		required: true
 	},
 	bookings: [{
-		restaurantId: {
-			type: String,
-			required: true
-		},
-		// bookingTime: {
-		// 	type: Date,
-		// 	required: true
-		// },
-		restaurantName: {
-			type: String,
-			required: true
-		},
+		type: String,
+		required: true
 	}],
 	restaurantAdded: [{
 		type: String,
