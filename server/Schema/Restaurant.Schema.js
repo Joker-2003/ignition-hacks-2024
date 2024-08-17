@@ -52,11 +52,11 @@ const RestaurantSchema = new Schema({
 		required : true
 	},
 	hours : {
-		open : {
+		start : {
 			type : String,
 			required : true
 		},
-		close : {
+		end : {
 			type : String,
 			required : true
 		}
