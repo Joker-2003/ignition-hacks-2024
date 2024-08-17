@@ -47,7 +47,17 @@ app.post('/api/users/booking/add', async (req, res) => {
 	}
 });
 
-
+app.post('/api/users/booking/remove', async (req, res) => {
+	const { userId, restaurantId } = req.body;
+	try{
+		let result = await DB.collection('users').updateOne({id: userId}, {$pull: {bookings: {restaurantId: restaurantId}}});
+		let result2 = await DB.collection('restaurants').updateOne({id: restaurantId}, {$inc: {bookingCount: -1}});
+		res.status(200).json({ message: 'Booking removed successfully' });
+	}
+	catch(err){
+		res.status(500).json({ error: 'Failed to remove booking', err: err });
+	}
+})
 
 
 
