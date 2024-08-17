@@ -4,9 +4,10 @@ const port = 5001;
 require('dotenv').config();
 const db = require('./db');
 const cors = require('cors');
-const nanoid = require('nanoid');
 const RestaurantSchema = require('./Schema/Restaurant.Schema');
+const UserSchema = require('./Schema/User.Schema');
 
+app.use(cors());
 app.use(express.json());
 
 let DB;
@@ -18,54 +19,64 @@ app.get('/', (req, res) => {
 /***************************  USER  *****************************/
 
 // Create a new user
-app.post('/api/users/create', async (req, res) => {
+app.post('/api/users/login', async (req, res) => {
 	const { id, email } = req.body;
-	let user = new UserSchema({
-		id: id,
-		email: email,
-		bookings: [],
-		restaurantAdded: []
-	});
-	try{
-		let result = await DB.collection('users').insertOne(user);
-		res.status(200).json({ message: 'User created successfully', user: user });
-	}
-	catch(err){
-		res.status(500).json({ error: 'Failed to create user', err: err });
-	}
+	
+		let user = await DB.collection('users').findOne({
+			id: id
+		});
+		if (user) {
+			res.status(200).json({ message: 'User found', user: user });
+		} else {
+
+			let user = new UserSchema({
+				id: id,
+				email: email,
+				bookings: [],
+				restaurantAdded: []
+			});
+			try {
+				let result = await DB.collection('users').insertOne(user);
+				res.status(200).json({ message: 'User created successfully', user: user });
+			}
+			catch (err) {
+				res.status(500).json({ error: 'Failed to create user', err: err });
+			}
+		}
+
 });
 
 app.post('/api/users/booking/add', async (req, res) => {
 	const { userId, restaurantId, restaurantName } = req.body;
-	try{
-		let result = await DB.collection('users').updateOne({id: userId}, {$push: {bookings: {restaurantId: restaurantId, restaurantName: restaurantName}}});
-		let result2 = await DB.collection('restaurants').updateOne({id: restaurantId}, {$inc: {bookingCount: 1}});
+	try {
+		let result = await DB.collection('users').updateOne({ id: userId }, { $push: { bookings: { restaurantId: restaurantId, restaurantName: restaurantName } } });
+		let result2 = await DB.collection('restaurants').updateOne({ id: restaurantId }, { $inc: { bookingCount: 1 } });
 		res.status(200).json({ message: 'Booking added successfully' });
 	}
-	catch(err){
+	catch (err) {
 		res.status(500).json({ error: 'Failed to add booking', err: err });
 	}
 });
 
 app.post('/api/users/booking/remove', async (req, res) => {
 	const { userId, restaurantId } = req.body;
-	try{
-		let result = await DB.collection('users').updateOne({id: userId}, {$pull: {bookings: {restaurantId: restaurantId}}});
-		let result2 = await DB.collection('restaurants').updateOne({id: restaurantId}, {$inc: {bookingCount: -1}});
+	try {
+		let result = await DB.collection('users').updateOne({ id: userId }, { $pull: { bookings: { restaurantId: restaurantId } } });
+		let result2 = await DB.collection('restaurants').updateOne({ id: restaurantId }, { $inc: { bookingCount: -1 } });
 		res.status(200).json({ message: 'Booking removed successfully' });
 	}
-	catch(err){
+	catch (err) {
 		res.status(500).json({ error: 'Failed to remove booking', err: err });
 	}
 })
 
 app.get('/api/users/:id', async (req, res) => {
 	const id = req.params.id;
-	try{
-		let result = await DB.collection('users').findOne({id: id});
+	try {
+		let result = await DB.collection('users').findOne({ id: id });
 		res.status(200).json({ message: 'User found', user: result });
 	}
-	catch(err){
+	catch (err) {
 		res.status(500).json({ error: 'Failed to find user', err: err });
 	}
 }
@@ -78,7 +89,7 @@ app.get('/api/users/:id', async (req, res) => {
 // Create a new restaurant
 app.post('/api/restaurants/create', async (req, res) => {
 	const { userid, name, location, phone, cuisine, hours, menu, bookingCount, dietaryOptions, quantity } = req.body;
-	const id = nanoid.nanoid();
+	const id = Math.random().toString(36).substr(2, 9);
 	let restaurant = new RestaurantSchema({
 		id: id,
 		userid: userid,
@@ -92,11 +103,11 @@ app.post('/api/restaurants/create', async (req, res) => {
 		dietaryOptions: dietaryOptions,
 		quantity: quantity
 	});
-	try{
+	try {
 		let result = await DB.collection('restaurants').insertOne(restaurant);
 		res.status(200).json({ message: 'Restaurant created successfully', restaurant: restaurant });
 	}
-	catch(err){
+	catch (err) {
 		res.status(500).json({ error: 'Failed to create restaurant', err: err });
 	}
 
@@ -104,7 +115,7 @@ app.post('/api/restaurants/create', async (req, res) => {
 });
 
 // Update an existing restaurant
-app.post('/api/restaurants/update', async (req, res) => { 
+app.post('/api/restaurants/update', async (req, res) => {
 	const { userid, id, name, location, phone, cuisine, hours, menu, bookingCount, dietaryOptions, quantity } = req.body;
 	let restaurant = new RestaurantSchema({
 		id: id,
@@ -119,11 +130,11 @@ app.post('/api/restaurants/update', async (req, res) => {
 		dietaryOptions: dietaryOptions,
 		quantity: quantity
 	});
-	try{
-		let result = await DB.collection('restaurants').updateOne({id: id}, {$set: restaurant});
+	try {
+		let result = await DB.collection('restaurants').updateOne({ id: id }, { $set: restaurant });
 		res.status(200).json({ message: 'Restaurant updated successfully', restaurant: restaurant });
 	}
-	catch(err){
+	catch (err) {
 		res.status(500).json({ error: 'Failed to update restaurant', err: err });
 	}
 });
@@ -131,38 +142,38 @@ app.post('/api/restaurants/update', async (req, res) => {
 // Get a restaurant by ID
 app.get('/api/restaurants/:id', async (req, res) => {
 	const id = req.params.id;
-	try{
-		let result = await DB.collection('restaurants').findOne({id: id});
+	try {
+		let result = await DB.collection('restaurants').findOne({ id: id });
 		res.status(200).json({ message: 'Restaurant found', restaurant: result });
 	}
-	catch(err){
+	catch (err) {
 		res.status(500).json({ error: 'Failed to find restaurant', err: err });
 	}
 });
 
 // Get all restaurants
 app.get('/api/restaurants/all', async (req, res) => {
-	try{
+	try {
 		let result = await DB.collection('restaurants').find().toArray();
 		res.status(200).json({ message: 'Restaurants found', restaurants: result });
 	}
-	catch(err){
+	catch (err) {
 		res.status(500).json({ error: 'Failed to find restaurants', err: err });
 	}
- });
+});
 
 // Delete a restaurant
 app.get('/api/restaurants/delete/:id', async (req, res) => {
 	const id = req.params.id;
-	try{
-		let result = await DB.collection('restaurants').deleteOne({id: id});
+	try {
+		let result = await DB.collection('restaurants').deleteOne({ id: id });
 		res.status(200).json({ message: 'Restaurant deleted successfully' });
 	}
-	catch(err){
+	catch (err) {
 		res.status(500).json({ error: 'Failed to delete restaurant', err: err });
 	}
-	
- });
+
+});
 
 
 
