@@ -52,6 +52,8 @@ const Map = () => {
   const [directions, setDirections] = useState(null);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [directionDetails, setDirectionDetails] = useState('');
+  const [showCircles, setShowCircles] = useState(true);
+  const [travelMode, setTravelMode] = useState('DRIVING'); // 'DRIVING' or 'WALKING'
 
   const mapRef = useRef(null);
 
@@ -99,7 +101,7 @@ const Map = () => {
         {
           origin: userLocation,
           destination: selectedPOI,
-          travelMode: window.google.maps.TravelMode.DRIVING,
+          travelMode: window.google.maps.TravelMode[travelMode],
         },
         (result, status) => {
           if (status === window.google.maps.DirectionsStatus.OK) {
@@ -119,7 +121,7 @@ const Map = () => {
   }, [userLocation]);
 
   useEffect(() => {
-    if (map && userLocation) {
+    if (map && userLocation && showCircles) {
       const circleOptions = [
         { radius: 2000, color: '#ff0000', label: '0-2km' },
         { radius: 4000, color: '#00ff00', label: '2-4km' },
@@ -148,6 +150,11 @@ const Map = () => {
         <button onClick={() => userLocation && mapRef.current && mapRef.current.panTo(userLocation)}>
           Pan to My Location
         </button>
+        {/* <button onClick={() => setShowCircles((prev) => !prev)}>
+          {showCircles ? 'Hide Circles' : 'Show Circles'}
+        </button> */}
+        <button onClick={() => setTravelMode('DRIVING')}>Driving Directions</button>
+        <button onClick={() => setTravelMode('WALKING')}>Walking Directions</button>
         {selectedMarker && (
           <div>
             <h4>{selectedMarker.label}</h4>
