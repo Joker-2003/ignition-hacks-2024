@@ -16,10 +16,10 @@ const UserSchema = new Schema({
 			type: String,
 			required: true
 		},
-		bookingTime: {
-			type: Date,
-			required: true
-		},
+		// bookingTime: {
+		// 	type: Date,
+		// 	required: true
+		// },
 		restaurantName: {
 			type: String,
 			required: true

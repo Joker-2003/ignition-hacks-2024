@@ -17,6 +17,36 @@ app.get('/', (req, res) => {
 
 /***************************  USER  *****************************/
 
+// Create a new user
+app.post('/api/users/create', async (req, res) => {
+	const { id, email } = req.body;
+	let user = new UserSchema({
+		id: id,
+		email: email,
+		bookings: [],
+		restaurantAdded: []
+	});
+	try{
+		let result = await DB.collection('users').insertOne(user);
+		res.status(200).json({ message: 'User created successfully', user: user });
+	}
+	catch(err){
+		res.status(500).json({ error: 'Failed to create user', err: err });
+	}
+});
+
+app.post('/api/users/booking/add', async (req, res) => {
+	const { userId, restaurantId, restaurantName } = req.body;
+	try{
+		let result = await DB.collection('users').updateOne({id: userId}, {$push: {bookings: {restaurantId: restaurantId, restaurantName: restaurantName}}});
+		let result2 = await DB.collection('restaurants').updateOne({id: restaurantId}, {$inc: {bookingCount: 1}});
+		res.status(200).json({ message: 'Booking added successfully' });
+	}
+	catch(err){
+		res.status(500).json({ error: 'Failed to add booking', err: err });
+	}
+});
+
 
 
 
