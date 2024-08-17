@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { GoogleMap, LoadScript, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import './map.css'; 
+import { GoogleLogin } from '../firebase';
 
 const markerColors = [
   'red', 'blue', 'green', 'purple', 'orange',
@@ -32,6 +33,7 @@ const Map = () => {
   const [showCircles, setShowCircles] = useState(true);
   const [travelMode, setTravelMode] = useState('DRIVING'); 
   const [circles, setCircles] = useState([]); 
+  const [user, setUser] = useState(null);
   const [filters, setFilters] = useState({
     showFood: true,
     showParks: true,
@@ -177,8 +179,16 @@ const Map = () => {
     }));
   };
 
-  const handleLogin = () => { 
+  const handleLogin = async () => { 
     console.log("Login button clicked");
+  
+    try{
+    let result = await GoogleLogin();
+    console.log(result);
+    }
+    catch (error) {
+      console.log(error);
+    }
   };
 
   return (
