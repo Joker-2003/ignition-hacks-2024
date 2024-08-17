@@ -202,8 +202,9 @@ const Map = () => {
       catch (error) {
         console.log(error);
       }
-      setDisableLogin(false);
+      
     };
+    setDisableLogin(false);
   }
   const handleAddRestaurant = async () => {
     if (loggedIn) {
@@ -211,9 +212,10 @@ const Map = () => {
     }
     else {
       await handleLogin();
-      if (loggedIn) {
+      
+        console.log("Logged in");
         navigate('/add-restaurant');
-      }
+      
     }
   }
 

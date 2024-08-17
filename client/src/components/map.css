@@ -91,6 +91,16 @@
 	border-radius: 5px;
 	cursor: pointer;
   }
+  .add-restaurant-btn{
+	padding: 10px 20px;
+	background-color: #4285f4;
+	color: white;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	margin-left: 10px;
+	
+  }
   
   .login-btn:hover {
 	background-color: #357ae8;
