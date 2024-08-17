@@ -3,6 +3,8 @@ import { GoogleMap, LoadScript, Marker, DirectionsRenderer } from '@react-google
 import './map.css';
 import { GoogleLogin, GoogleLogout } from '../firebase';
 import { useNavigate } from 'react-router-dom';
+import { useGlobalState } from '../App';
+import { UserLogin } from '../api/api';
 
 const markerColors = [
   'red', 'blue', 'green', 'purple', 'orange',
@@ -40,6 +42,7 @@ const Map = () => {
     showFood: true,
     showParks: true,
   });
+  const [user, setUser] = useGlobalState('user');
 
   const mapRef = useRef(null);
   const navigate = useNavigate();
@@ -188,6 +191,7 @@ const Map = () => {
       try {
         await GoogleLogout();
         setLoggedIn(false);
+        setUser(null);
       }
       catch (error) {
         console.log(error);
@@ -196,7 +200,9 @@ const Map = () => {
     else {
       try {
         let result = await GoogleLogin();
-        console.log(result);
+        let res = await UserLogin(result.user.email, result.user.uid);
+        setUser(res.user);
+        console.log(res);
         setLoggedIn(true);
       }
       catch (error) {
