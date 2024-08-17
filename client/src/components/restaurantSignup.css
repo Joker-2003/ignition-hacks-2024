@@ -92,4 +92,47 @@
   button[type="submit"]:hover {
 	background-color: #357ae8;
   }
+
+  
+.restaurant-card-brief {
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	padding: 16px;
+	max-width: 400px;
+	margin: 16px auto;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	background-color: #fff;
+  }
+  
+  .restaurant-card-title {
+	font-size: 20px;
+	margin-bottom: 12px;
+  }
+  
+  .restaurant-card-brief p {
+	margin: 8px 0;
+  }
+  
+  .buttons {
+	margin-top: 16px;
+  }
+  
+  .btn {
+	padding: 8px 16px;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: 16px;
+	margin-right: 8px;
+  }
+  
+  .btn-primary {
+	background-color: #007bff;
+	color: #fff;
+  }
+  
+  .btn-secondary {
+	background-color: #6c757d;
+	color: #fff;
+  }
   

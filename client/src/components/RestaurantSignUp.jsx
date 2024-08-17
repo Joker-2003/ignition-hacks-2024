@@ -1,7 +1,9 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { GoogleMap, useLoadScript, Autocomplete } from '@react-google-maps/api';
 import './restaurantSignup.css';
 import { addRestaurant } from '../api/api';
+import { useGlobalState } from '../App';
+import { useNavigate } from 'react-router-dom';
 
 const libraries = ['places'];
 export default function RestaurantSignUp() {
@@ -19,6 +21,15 @@ export default function RestaurantSignUp() {
     menu: [{ name: '' }],
     address: '',
   });
+
+  const navigate = useNavigate();
+  const [user, setUser] = useGlobalState('user');
+  useEffect(() => {
+	
+	if (!user) {
+		navigate('/');
+	}
+  },[]);
 
   const autocompleteRef = useRef(null);
 
@@ -91,20 +102,20 @@ export default function RestaurantSignUp() {
 	catch(err){
 		console.log(err);
 	}
-    setFormData({
-      id: '',
-      userid: '',
-      name: '',
-      location: { longitude: '', latitude: '' },
-      cuisine: '',
-      phone: '',
-      bookingCount: 0,
-      dietaryOptions: { isHalal: false, isVegetarian: false },
-      quantity: 0,
-      hours: { start: '', end: '' },
-      menu: [{ name: '' }],
-      address: '',
-    });
+    // setFormData({
+    //   id: '',
+    //   userid: '',
+    //   name: '',
+    //   location: { longitude: '', latitude: '' },
+    //   cuisine: '',
+    //   phone: '',
+    //   bookingCount: 0,
+    //   dietaryOptions: { isHalal: false, isVegetarian: false },
+    //   quantity: 0,
+    //   hours: { start: '', end: '' },
+    //   menu: [{ name: '' }],
+    //   address: '',
+    // });
 	setDisableSubmit(false);
   };
 

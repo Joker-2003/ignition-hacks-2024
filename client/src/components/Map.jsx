@@ -75,8 +75,8 @@ const Map = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [disableLogin, setDisableLogin] = useState(false);
   const [filters, setFilters] = useState({
-    showFood: true,
-    showParks: true,
+    halal: false,
+    vegetarian: false,
   });
   const [restaurants, setRestaurants] = useState([]);
   const [user, setUser] = useGlobalState('user');
@@ -110,6 +110,7 @@ const Map = () => {
         let res = await fetchAllRestaurants();
         setRestaurants(res);
       }
+      fetchData();
   }, []);
 
   const onLoad = (map) => {
@@ -307,18 +308,18 @@ const Map = () => {
               <label>
                 <input
                   type="checkbox"
-                  checked={filters.showFood}
-                  onChange={() => handleFilterChange('showFood')}
+                  checked={filters.halal}
+                  onChange={() => handleFilterChange('halal')}
                 />
-                Show Food
+                Halal
               </label>
               <label>
                 <input
                   type="checkbox"
-                  checked={filters.showParks}
-                  onChange={() => handleFilterChange('showParks')}
+                  checked={filters.vegetarian}
+                  onChange={() => handleFilterChange('vegetarian')}
                 />
-                Show Parks
+                Vegetarian
               </label>
             </div>
           </div>
