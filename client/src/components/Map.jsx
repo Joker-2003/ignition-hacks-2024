@@ -4,7 +4,7 @@ import './map.css';
 import { GoogleLogin, GoogleLogout } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../App';
-import { UserLogin } from '../api/api';
+import { fetchAllRestaurants, UserLogin } from '../api/api';
 
 const markerColors = [
   'red', 'blue', 'green', 'purple', 'orange',
@@ -26,6 +26,42 @@ const generateMarkers = (userLocation) => {
   }));
 };
 
+const RestaurantCardBrief = ({ formData }) => {
+  const {
+    id,
+    name,
+    address,
+    cuisine,
+    location,
+    phone,
+    distance,
+    bookingCount,
+    quantity,
+    hours,
+  } = formData;
+
+  const handleDirectionsClick = () => {
+   
+  };
+
+  return (
+    <div className="restaurant-card-brief">
+      <h2 className="restaurant-card-title">{name}</h2>
+      <p><strong>Address:</strong> {address}</p>
+      <p><strong>Cuisine:</strong> {cuisine}</p>
+      <p><strong>Phone:</strong> {phone}</p>
+      <p><strong>Distance:</strong> {distance}</p>
+      <p><strong>Booking Count:</strong> {bookingCount}</p>
+      <p><strong>Quantity:</strong> {quantity}</p>
+      <p><strong>Distribution Hours:</strong> {hours.start} - {hours.end}</p>
+      <div className="buttons">
+        <button className="btn btn-primary">Book Now</button>
+        <button className="btn btn-secondary" onClick={handleDirectionsClick}>Get Directions</button>
+      </div>
+    </div>
+  );
+};
+
 const Map = () => {
   const [map, setMap] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
@@ -42,6 +78,7 @@ const Map = () => {
     showFood: true,
     showParks: true,
   });
+  const [restaurants, setRestaurants] = useState([]);
   const [user, setUser] = useGlobalState('user');
 
   const mapRef = useRef(null);
@@ -66,6 +103,13 @@ const Map = () => {
         () => null
       );
     }
+  }, []);
+
+  useEffect(() => { 
+      async function fetchData() {
+        let res = await fetchAllRestaurants();
+        setRestaurants(res);
+      }
   }, []);
 
   const onLoad = (map) => {

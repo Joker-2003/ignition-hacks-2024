@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { GoogleMap, useLoadScript, Autocomplete } from '@react-google-maps/api';
 import './restaurantSignup.css';
+import { addRestaurant } from '../api/api';
 
 const libraries = ['places'];
 export default function RestaurantSignUp() {
@@ -20,6 +21,8 @@ export default function RestaurantSignUp() {
   });
 
   const autocompleteRef = useRef(null);
+
+  const [disableSubmit, setDisableSubmit] = useState(false);
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_API,
@@ -77,10 +80,17 @@ export default function RestaurantSignUp() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+	setDisableSubmit(true);
     e.preventDefault();
     console.log('Restaurant added:', formData);
-    
+	try{
+    let res =  await addRestaurant(formData);
+	console.log(res);
+	}
+	catch(err){
+		console.log(err);
+	}
     setFormData({
       id: '',
       userid: '',
@@ -95,6 +105,7 @@ export default function RestaurantSignUp() {
       menu: [{ name: '' }],
       address: '',
     });
+	setDisableSubmit(false);
   };
 
   if (loadError) return <div>Error loading Google Maps</div>;
@@ -261,7 +272,7 @@ export default function RestaurantSignUp() {
           </button>
         </div>
 
-        <button type="submit" className="submit-btn">Save Restaurant</button>
+        <button disabled={disableSubmit} type="submit" className="submit-btn">Save Restaurant</button>
       </form>
       
     </div>

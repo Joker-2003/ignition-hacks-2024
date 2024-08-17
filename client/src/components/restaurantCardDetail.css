@@ -1,0 +1,28 @@
+.restaurant-card {
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	padding: 16px;
+	max-width: 600px;
+	margin: 16px auto;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	background-color: #fff;
+  }
+  
+  .restaurant-card-title {
+	font-size: 24px;
+	margin-bottom: 12px;
+  }
+  
+  .restaurant-card p {
+	margin: 8px 0;
+  }
+  
+  .restaurant-card ul {
+	list-style-type: none;
+	padding: 0;
+  }
+  
+  .restaurant-card li {
+	margin: 4px 0;
+  }
+  

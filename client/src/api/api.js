@@ -19,3 +19,12 @@ export const addRestaurant = async (restaurant) => {
 		throw error;
 	}
 }
+
+export const fetchAllRestaurants = async () => {
+	try {
+		const response = await axios.get(`${URL}/api/restaurants/all`);
+		return response.data;
+	} catch (error) {
+		throw error;
+	}
+};
