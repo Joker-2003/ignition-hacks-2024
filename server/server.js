@@ -88,7 +88,7 @@ app.get('/api/users/:id', async (req, res) => {
 
 // Create a new restaurant
 app.post('/api/restaurants/create', async (req, res) => {
-	const { userid, name, location, phone, cuisine, hours, menu, bookingCount, dietaryOptions, quantity } = req.body;
+	const { userid, name, location, phone, cuisine, address, hours, menu, bookingCount, dietaryOptions, quantity } = req.body;
 	const id = Math.random().toString(36).substr(2, 9);
 	let restaurant = new RestaurantSchema({
 		id: id,
@@ -101,7 +101,8 @@ app.post('/api/restaurants/create', async (req, res) => {
 		menu: menu,
 		bookingCount: bookingCount,
 		dietaryOptions: dietaryOptions,
-		quantity: quantity
+		quantity: quantity,
+		address: address
 	});
 	try {
 		let result = await DB.collection('restaurants').insertOne(restaurant);
@@ -153,8 +154,11 @@ app.get('/api/restaurants/:id', async (req, res) => {
 
 // Get all restaurants
 app.get('/api/restaurants/all', async (req, res) => {
+	console.log('Finding restaurants');
 	try {
+		console.log('Finding restaurants');
 		let result = await DB.collection('restaurants').find().toArray();
+		console.log(result);
 		res.status(200).json({ message: 'Restaurants found', restaurants: result });
 	}
 	catch (err) {
