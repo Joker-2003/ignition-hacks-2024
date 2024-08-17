@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { GoogleMap, LoadScript, Marker, DirectionsRenderer } from '@react-google-maps/api';
 import './map.css';
 import { GoogleLogin, GoogleLogout } from '../firebase';
-import { set } from 'mongoose';
+import { useNavigate } from 'react-router-dom';
 
 const markerColors = [
   'red', 'blue', 'green', 'purple', 'orange',
@@ -42,6 +42,7 @@ const Map = () => {
   });
 
   const mapRef = useRef(null);
+  const navigate = useNavigate();
 
   const defaultCenter = { lat: 37.7749, lng: -122.4194 };
 
@@ -183,30 +184,41 @@ const Map = () => {
 
   const handleLogin = async () => {
     setDisableLogin(true);
-  if (loggedIn) {
-    try {
-      await GoogleLogout();
-      setLoggedIn(false);
+    if (loggedIn) {
+      try {
+        await GoogleLogout();
+        setLoggedIn(false);
+      }
+      catch (error) {
+        console.log(error);
+      }
     }
-    catch (error) {
-      console.log(error);
+    else {
+      try {
+        let result = await GoogleLogin();
+        console.log(result);
+        setLoggedIn(true);
+      }
+      catch (error) {
+        console.log(error);
+      }
+      setDisableLogin(false);
+    };
+  }
+  const handleAddRestaurant = async () => {
+    if (loggedIn) {
+      navigate('/add-restaurant');
+    }
+    else {
+      await handleLogin();
+      if (loggedIn) {
+        navigate('/add-restaurant');
+      }
     }
   }
-  else{
-    try {
-      let result = await GoogleLogin();
-      console.log(result);
-      setLoggedIn(true);
-    }
-    catch (error) {
-      console.log(error);
-    }
-    setDisableLogin(false);
-  };
-}
 
   return (
-    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_API}>
+    <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_API} >
       <div className="panel">
         <button onClick={() => userLocation && mapRef.current && mapRef.current.panTo(userLocation)}>
           Pan to My Location
@@ -260,7 +272,8 @@ const Map = () => {
           </div>
         </div>
         <div className="top-right-controls">
-          <button className="login-btn"  disabled={disableLogin} onClick={handleLogin}>{ loggedIn ? "Logout"  : "Login"}</button>
+          <button className="login-btn" disabled={disableLogin} onClick={handleLogin}>{loggedIn ? "Logout" : "Login"}</button>
+          <button className="add-restaurant-btn" disabled={disableLogin} onClick={handleAddRestaurant}>Add Restaurant</button>
         </div>
         <GoogleMap
           mapContainerStyle={{ width: '100%', height: '100%' }}
@@ -268,6 +281,16 @@ const Map = () => {
           zoom={10}
           onLoad={onLoad}
           onClick={handleMapClick}
+          options={
+            {
+              disableDefaultUI: true,
+              zoomControl: true,
+              fullscreenControl: false,
+              streetViewControl: false,
+              mapTypeControl: false,
+
+            }
+          }
         >
           {userLocation && <Marker position={userLocation} label="You" />}
           {markers.map((marker) => (

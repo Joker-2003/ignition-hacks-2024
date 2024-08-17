@@ -16,7 +16,7 @@ function App() {
     <div className="App">
       <Routes>
         <Route path="/" element={<Map />} />
-        <Route path ="/restaurant/create" element={<RestaurantSignUp />} />
+        <Route path ="/add-restaurant" element={<RestaurantSignUp />} />
       </Routes>
     </div>
   );
