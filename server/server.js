@@ -65,10 +65,11 @@ app.post('/api/users/booking/remove', async (req, res) => {
 
 // Create a new restaurant
 app.post('/api/restaurants/create', async (req, res) => {
-	const { name, location, phone, cuisine, hours, menu, bookingCount, dietaryOptions, quantity } = req.body;
+	const { userid, name, location, phone, cuisine, hours, menu, bookingCount, dietaryOptions, quantity } = req.body;
 	const id = nanoid.nanoid();
 	let restaurant = new RestaurantSchema({
 		id: id,
+		userid: userid,
 		name: name,
 		location: location,
 		phone: phone,
@@ -92,9 +93,10 @@ app.post('/api/restaurants/create', async (req, res) => {
 
 // Update an existing restaurant
 app.post('/api/restaurants/update', async (req, res) => { 
-	const { id, name, location, phone, cuisine, hours, menu, bookingCount, dietaryOptions, quantity } = req.body;
+	const { userid, id, name, location, phone, cuisine, hours, menu, bookingCount, dietaryOptions, quantity } = req.body;
 	let restaurant = new RestaurantSchema({
 		id: id,
+		userid: userid,
 		name: name,
 		location: location,
 		phone: phone,

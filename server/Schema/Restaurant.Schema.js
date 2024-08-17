@@ -7,6 +7,10 @@ const RestaurantSchema = new Schema({
 		required: true,
 		unique : true
 	},
+	userid: {
+		type: String,
+		required: true
+	},
 	name: {
 		type: String,
 		required: true
