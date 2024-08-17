@@ -1,30 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { GoogleMap, LoadScript, Marker, DirectionsRenderer } from '@react-google-maps/api';
-import './map.css'; // Import your CSS file
-
-const containerStyle = {
-  width: '100%',
-  height: '100vh',
-};
-
-const panelStyle = {
-  width: '300px',
-  height: '100vh',
-  padding: '20px',
-  backgroundColor: '#fff',
-  boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
-  position: 'fixed',
-  top: '0',
-  left: '0',
-  zIndex: '1',
-  overflowY: 'scroll',
-};
-
-const mapContainerStyle = {
-  width: 'calc(100% - 300px)',
-  height: '100vh',
-  marginLeft: '300px',
-};
+import './map.css'; 
 
 const markerColors = [
   'red', 'blue', 'green', 'purple', 'orange',
@@ -56,6 +32,10 @@ const Map = () => {
   const [showCircles, setShowCircles] = useState(true);
   const [travelMode, setTravelMode] = useState('DRIVING'); 
   const [circles, setCircles] = useState([]); 
+  const [filters, setFilters] = useState({
+    showFood: true,
+    showParks: true,
+  });
 
   const mapRef = useRef(null);
 
@@ -190,6 +170,17 @@ const Map = () => {
     return userLocation ? generateMarkers(userLocation) : [];
   }, [userLocation]);
 
+  const handleFilterChange = (filterName) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [filterName]: !prevFilters[filterName],
+    }));
+  };
+
+  const handleLogin = () => { 
+    console.log("Login button clicked");
+  };
+
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_API}>
       <div className="panel">
@@ -221,6 +212,32 @@ const Map = () => {
         </div>
       </div>
       <div className="map-container">
+        <div className="top-left-controls">
+          <div className="dropdown">
+            <button className="dropbtn">Filters</button>
+            <div className="dropdown-content">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={filters.showFood}
+                  onChange={() => handleFilterChange('showFood')}
+                />
+                Show Food
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={filters.showParks}
+                  onChange={() => handleFilterChange('showParks')}
+                />
+                Show Parks
+              </label>
+            </div>
+          </div>
+        </div>
+        <div className="top-right-controls">
+          <button className="login-btn" onClick={handleLogin}>Login</button>
+        </div>
         <GoogleMap
           mapContainerStyle={{ width: '100%', height: '100%' }}
           center={userLocation || defaultCenter}

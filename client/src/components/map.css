@@ -1,14 +1,14 @@
 
 .map-container {
-	width: 80%;
+	width: calc(100% - 300px);
 	height: 100vh;
-	margin-left: 20%;
+	margin-left: 300px;
 	position: relative;
 
   }
   
   .panel {
-	width: 25%;
+	width: 300px;
 	height: 100vh;
 	padding: 20px;
 	background-color: #ffffff;
@@ -76,4 +76,70 @@
   
   
 
- 
+  .top-right-controls {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	z-index: 2;
+  }
+  
+  .login-btn {
+	padding: 10px 20px;
+	background-color: #4285f4;
+	color: white;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+  }
+  
+  .login-btn:hover {
+	background-color: #357ae8;
+  }
+  
+  .top-left-controls {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	z-index: 2;
+  }
+  
+  .dropdown {
+	position: relative;
+	display: inline-block;
+  }
+  
+  .dropbtn {
+	background-color: #4285f4;
+	color: white;
+	padding: 10px 20px;
+	font-size: 16px;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	margin-top: 50px;
+	margin-left: 50px;
+  }
+  
+  .dropdown-content {
+	display: none;
+	position: absolute;
+	background-color: #f9f9f9;
+	min-width: 160px;
+	box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+	z-index: 1;
+	padding: 10px;
+  }
+  
+  .dropdown-content label {
+	display: block;
+	margin-bottom: 5px;
+  }
+  
+  .dropdown-content label input {
+	margin-right: 10px;
+  }
+  
+  .dropdown:hover .dropdown-content {
+	display: block;
+  }
+  
