@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { GoogleMap, LoadScript, Marker, DirectionsRenderer } from '@react-google-maps/api';
+import './map.css'; 
 
 const containerStyle = {
   width: '100%',
@@ -189,9 +190,10 @@ const Map = () => {
     return userLocation ? generateMarkers(userLocation) : [];
   }, [userLocation]);
 
+ 
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_API}>
-      <div style={panelStyle}>
+      <div className="panel">
         <button onClick={() => userLocation && mapRef.current && mapRef.current.panTo(userLocation)}>
           Pan to My Location
         </button>
@@ -206,15 +208,20 @@ const Map = () => {
             <button onClick={() => getDirections()}>Get Directions</button>
           </div>
         )}
-        {directionDetails && <div><h4>Directions</h4><p>{directionDetails}</p></div>}
-        <div style={{ marginTop: '20px' }}>
+        {directionDetails && (
+          <div className="directions-details">
+            <h4>Directions</h4>
+            <p>{directionDetails}</p>
+          </div>
+        )}
+        <div className="legend">
           <h4>Legend</h4>
-          <div><span style={{ backgroundColor: '#ff0000', width: '20px', height: '20px', display: 'inline-block' }}></span> 0-2km</div>
-          <div><span style={{ backgroundColor: '#00ff00', width: '20px', height: '20px', display: 'inline-block' }}></span> 2-4km</div>
-          <div><span style={{ backgroundColor: '#0000ff', width: '20px', height: '20px', display: 'inline-block' }}></span> 4-10km</div>
+          <div><span style={{ backgroundColor: '#ff0000' }}></span> 0-2km</div>
+          <div><span style={{ backgroundColor: '#00ff00' }}></span> 2-4km</div>
+          <div><span style={{ backgroundColor: '#0000ff' }}></span> 4-10km</div>
         </div>
       </div>
-      <div style={mapContainerStyle}>
+      <div className="map-container">
         <GoogleMap
           mapContainerStyle={{ width: '100%', height: '100%' }}
           center={userLocation || defaultCenter}
