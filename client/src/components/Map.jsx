@@ -234,12 +234,12 @@ const Map = () => {
               key={marker.id}
               position={marker.position}
               label={
-                <span className={marker.id === selectedMarker?.id ? 'highlighted-label marker-label' : 'marker-label'}>
+                <span >
                   {marker.label}
                 </span>
               }
               icon={{
-                path: window.google.maps.SymbolPath.CIRCLE,
+                path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
                 scale: 10,
                 fillColor: marker.color,
                 fillOpacity: 0.8,
