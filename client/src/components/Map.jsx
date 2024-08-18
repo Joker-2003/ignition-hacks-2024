@@ -4,7 +4,7 @@ import './map.css';
 import { GoogleLogin, GoogleLogout } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../App';
-import { bookSlot, fetchAllRestaurants, fetchUser, removeBooking, UserLogin } from '../api/api';
+import { fetchAllRestaurants, UserLogin } from '../api/api';
 
 const markerColors = [
   'red', 'blue', 'green', 'purple', 'orange',
@@ -32,16 +32,15 @@ const Map = () => {
   const [filters, setFilters] = useState({
     halal: false,
     vegetarian: false,
-    userBooking: false,
+    waterstations: false,
   });
   const [restaurants, setRestaurants] = useState([]);
   const [user, setUser] = useGlobalState('user');
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
   const [markers, setMarkers] = useState([]);
-  const [fetchAllRestaurantsFlag, setFetchAllRestaurantsFlag] = useState(0);
-  const [updateFilteredFlag, setUpdateFilteredFlag] = useState(0);
 
   const mapRef = useRef(null);
+  const waterStationLayerRef = useRef(null);
   const navigate = useNavigate();
 
   const defaultCenter = { lat: 37.7749, lng: -122.4194 };
@@ -65,70 +64,40 @@ const Map = () => {
     }
   }, []);
 
+  useEffect(() => {
+    console.log(filters);
+    console.log("res", restaurants);
+    if (filters.halal || filters.vegetarian || filters.waterstations) {
+      setFilteredRestaurants(
+        restaurants.filter((restaurant) => {
+          if (filters.halal && !restaurant.dietaryOptions.isHalal) {
+            return false;
+          }
+          if (filters.vegetarian && !restaurant.dietaryOptions.isVegetarian) {
+            return false;
+          }
+          generateMarkers(restaurant, waterstations, setMarkers);
+          return true;
+        })
+      );
+    } else {
+      setFilteredRestaurants(restaurants);
+      restaurants.forEach((restaurant) => {
+        generateMarkers(restaurant, waterstations, setMarkers);
+      }
+      );
+    }
+    console.log(filteredRestaurants);
+  }, [filters, restaurants]);
 
   useEffect(() => {
     async function fetchData() {
       let res = await fetchAllRestaurants();
       console.log(res);
-      setFilteredRestaurants([]);
       setRestaurants(res.restaurants);
-      setUpdateFilteredFlag(updateFilteredFlag + 1);
-      setFilters({
-        halal: false,
-        vegetarian: false,
-        userBooking: false,
-      });
     }
     fetchData();
-  }, [ fetchAllRestaurantsFlag]);
-
-
-  useEffect(() => {
-    console.log(filters);
-    console.log("res", restaurants);
-    if (filters.halal || filters.vegetarian || filters.userBooking) {
-      let filtered = restaurants.filter((restaurant) => {
-        return (
-          (!filters.halal || restaurant.dietaryOptions.isHalal) &&
-          (!filters.vegetarian || restaurant.dietaryOptions.isVegetarian) &&
-          (!filters.userBooking || (loggedIn && user && user.bookings && user.bookings.includes(restaurant.id)))
-        );
-      });
-      
-      filtered.forEach((restaurant) => {
-        generateMarkers(restaurant, setMarkers);
-        if (loggedIn && user && user.bookings && user.bookings.includes(restaurant.id)) {
-          restaurant.color = 'green';
-          restaurant.booked = true;
-        }
-      }
-      
-      );
-      setFilteredRestaurants(filtered);
-    }
-    else {
-      
-      restaurants.forEach((restaurant) => {
-        generateMarkers(restaurant, setMarkers);
-        console.log(user);
-        if (loggedIn && user && user.bookings && user.bookings.includes(restaurant.id)) {
-          restaurant.color = 'green';
-          restaurant.booked = true;
-        }
-      }
-      
-      );
-      setFilteredRestaurants(restaurants);
-    }
-    console.log(filteredRestaurants);
-  }, [filters, restaurants, updateFilteredFlag]);
-
-  useEffect(() => {
-    if (loggedIn) {
-      let res = fetchUser(user.id);
-      setUser(res.user);
-    }
-  }, [fetchAllRestaurantsFlag])
+  }, []);
 
   const onLoad = (map) => {
     setMap(map);
@@ -143,21 +112,30 @@ const Map = () => {
   };
 
 
-  const generateMarkers = (restaurant, setMarkers) => {
-    return setMarkers((prev) => [
-      ...prev,
-      {
-        id: restaurant.id,
-        position: {
-          lat: parseFloat(restaurant.location.latitude),
-          lng: parseFloat(restaurant.location.longitude),
-        },
-        label: restaurant.name,
-        color: 'blue',
-      },
-    ]);
+const generateMarkers = (restaurant, waterstations, setMarkers) => {
+  return  setMarkers((prev) => [
+  ...prev,
+  {
+    id: restaurant.id,
+    position: {
+      lat: parseFloat(restaurant.location.latitude),
+      lng: parseFloat(restaurant.location.longitude),
+    },
+    label: restaurant.name,
+    color: 'blue', 
+  },
+  {
+    id: waterstations.id,
+    position: {
+      lat: parseFloat(waterstations.location.latitude),
+      lng: parseFloat(waterstations.location.longitude),
+    },
+    label: waterstations.name,
+    color: 'red', 
+  },
+]);
 
-  };
+};
   const handleMarkerClick = (marker) => {
     setSelectedMarker(marker);
     setSelectedPOI(marker.position);
@@ -290,6 +268,22 @@ const Map = () => {
     };
     setDisableLogin(false);
   }
+
+  useEffect(() => {
+    if (map) {
+      if (filters.waterstations) {
+        // Load the GeoJSON file onto the map
+        map.data.loadGeoJson('C:\Users\heraa\Downloads\ignition-hacks-2024-master\ignition-hacks-2024-master\waterstations.geojson', null, (features) => {     
+        });
+      } else {
+        // Clear the existing data layer if the checkbox is unchecked
+        map.data.forEach((feature) => {
+          map.data.remove(feature);
+        });
+      }
+    }
+  }, [map, filters.waterstations]);
+
   const handleAddRestaurant = async () => {
     if (loggedIn) {
       navigate('/add-restaurant');
@@ -315,101 +309,64 @@ const Map = () => {
       distance,
       bookingCount,
       quantity,
-      hours, booked
+      hours,
     } = formData;
 
-    console.log(id, name, address, cuisine, location, phone, distance, bookingCount, quantity, hours, booked);
-
-    const [forceUpdate, setForceUpdate] = useState(false);
     const handleDirectionsClick = () => {
       if (userLocation && location) {
-        const directionsService = new window.google.maps.DirectionsService();
-
-        const givenLocation = {
-          lat: parseFloat(location.latitude),
-          lng: parseFloat(location.longitude),
-        };
-        // Fetch driving route
-        directionsService.route(
-          {
-            origin: userLocation,
-            destination: givenLocation,
-            travelMode: window.google.maps.TravelMode.DRIVING,
-          },
-          (result, status) => {
-            if (status === window.google.maps.DirectionsStatus.OK) {
-              setDirections((prev) => ({
-                ...prev,
-                driving: result
-              }));
-              if (travelMode === 'DRIVING') {
-                const { distance, duration } = result.routes[0].legs[0];
-                setDirectionDetails(`Driving - Distance: ${distance.text}, Duration: ${duration.text}`);
-              }
-            } else {
-              console.error(`Error fetching driving directions ${result}`);
+      const directionsService = new window.google.maps.DirectionsService();
+      
+      const givenLocation = {
+        lat: parseFloat(location.latitude),
+        lng: parseFloat(location.longitude),
+      };
+      // Fetch driving route
+      directionsService.route(
+        {
+          origin: userLocation,
+          destination: givenLocation,
+          travelMode: window.google.maps.TravelMode.DRIVING,
+        },
+        (result, status) => {
+          if (status === window.google.maps.DirectionsStatus.OK) {
+            setDirections((prev) => ({
+              ...prev,
+              driving: result
+            }));
+            if (travelMode === 'DRIVING') {
+              const { distance, duration } = result.routes[0].legs[0];
+              setDirectionDetails(`Driving - Distance: ${distance.text}, Duration: ${duration.text}`);
             }
+          } else {
+            console.error(`Error fetching driving directions ${result}`);
           }
-        );
+        }
+      );
 
 
-        directionsService.route(
-          {
-            origin: userLocation,
-            destination: givenLocation,
-            travelMode: window.google.maps.TravelMode.WALKING,
-          },
-          (result, status) => {
-            if (status === window.google.maps.DirectionsStatus.OK) {
-              setDirections((prev) => ({
-                ...prev,
-                walking: result
-              }));
-              if (travelMode === 'WALKING') {
-                const { distance, duration } = result.routes[0].legs[0];
-                setDirectionDetails(`Walking - Distance: ${distance.text}, Duration: ${duration.text}`);
-              }
-            } else {
-              console.error(`Error fetching walking directions ${result}`);
+      directionsService.route(
+        {
+          origin: userLocation,
+          destination: givenLocation,
+          travelMode: window.google.maps.TravelMode.WALKING,
+        },
+        (result, status) => {
+          if (status === window.google.maps.DirectionsStatus.OK) {
+            setDirections((prev) => ({
+              ...prev,
+              walking: result
+            }));
+            if (travelMode === 'WALKING') {
+              const { distance, duration } = result.routes[0].legs[0];
+              setDirectionDetails(`Walking - Distance: ${distance.text}, Duration: ${duration.text}`);
             }
+          } else {
+            console.error(`Error fetching walking directions ${result}`);
           }
-        );
-      }
+        }
+      );
     }
-
-    const handleCancelBooking = async () => {
-      if (loggedIn) {
-        console.log("Cancel Booking");
-        let res = await removeBooking(user.id, id);
-        console.log(res);
-        setFetchAllRestaurantsFlag(fetchAllRestaurantsFlag + 1);
-      }
-      else {
-        await handleLogin();
-        console.log("Cancel Booking");
-        setForceUpdate(!forceUpdate);
-      }
-    };
-
-    const handleBookNow = async () => {
-      if (loggedIn) {
-        console.log("Book Now");
-        try {
-          let res = await bookSlot(user.id, id);
-          console.log(res);
-          setFetchAllRestaurantsFlag(fetchAllRestaurantsFlag + 1);
-        }
-        catch (err) {
-          console.log(err);
-        }
-
-      }
-      else {
-        await handleLogin();
-        console.log("Book Now");
-      }
-      setForceUpdate(!forceUpdate);
-    };
+    }
 
     return (
       <div className="restaurant-card-brief">
@@ -422,26 +379,10 @@ const Map = () => {
         <p><strong>Quantity:</strong> {quantity}</p>
         <p><strong>Distribution Hours:</strong> {hours.start} - {hours.end}</p>
         <div className="buttons">
-          {booked ?
-            <button title={!loggedIn ? 'Login to cancel' : ''} disabled={!loggedIn} onClick={handleCancelBooking} className="btn btn-danger">Cancel Booking</button>
-            :
-            (
-              <div style={{ position: 'relative', display: 'inline-block' }}>
-                <button
-                  onClick={handleBookNow}
-                  disabled={!loggedIn}
-                  className="btn btn-primary"
-                  aria-label="Book Now"
-                >
-                  {loggedIn ? "Book Now" : "Login to Book"}
-                </button>
-
-              </div>
-            )
-          }
-          < button className="btn btn-secondary" onClick={handleDirectionsClick}>Get Directions</button>
+          <button className="btn btn-primary">Book Now</button>
+          <button className="btn btn-secondary" onClick={handleDirectionsClick}>Get Directions</button>
         </div>
-      </div >
+      </div>
     );
   };
 
@@ -501,16 +442,14 @@ const Map = () => {
                 />
                 Vegetarian
               </label>
-              {loggedIn &&
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={filters.userBooking}
-                    onChange={() => handleFilterChange('userBooking')}
-                  />
-                  User Booking
-                </label>
-              }
+              <label>
+                <input
+                  type="checkbox"
+                  checked={filters.waterstations}
+                  onChange={() => handleFilterChange('waterstations')}
+                />
+                Water Stations
+              </label>
             </div>
           </div>
         </div>
@@ -540,16 +479,10 @@ const Map = () => {
             <Marker
               key={marker.id}
               position={marker.position}
-              label={{
-                text: marker.label,
-                fontSize: '24px',  // Increase the font size here
-                backgroundColor: 'white',
-              }}
-              icon={
-                {
-                  url: `http://maps.google.com/mapfiles/ms/icons/${marker.color}-dot.png`,
-                }
+              label={
+                  marker.label
               }
+              
               color={marker.color}
               onClick={() => handleMarkerClick(marker)}
             />
