@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useGlobalState } from '../App';
 import { bookSlot, removeBooking } from '../api/api';
 import './restaurantBrief.css';
-export default function RestaurantBrief({ formData }, userLocation) {
+export default function RestaurantBrief({ formData }) {
     const {
       id,
       name,
@@ -24,12 +24,15 @@ export default function RestaurantBrief({ formData }, userLocation) {
     const [forceUpdate, setForceUpdate] = useState(false);
     const [directionDetails, setDirectionDetails] = useGlobalState('directionDetails');
     const [travelMode, setTravelMode] = useGlobalState('travelMode');
+	const [userLocation, setUserLocation] = useGlobalState('userLocation');
 
     const bookingPercentage = (bookingCount / quantity) * 100;
     const bookingStatusColor = bookingPercentage >= 90 ? 'red' : bookingPercentage >= 50 ? 'orange' : 'green';
 
     const handleDirectionsClick = () => {
       if (userLocation && location) {
+		console.log("hello");
+		console.log(userLocation);
         const directionsService = new window.google.maps.DirectionsService();
 
         const givenLocation = {
@@ -110,7 +113,7 @@ export default function RestaurantBrief({ formData }, userLocation) {
         <p><strong>Address:</strong> {address}</p>
         <p><strong>Cuisine:</strong> {cuisine}</p>
         <p><strong>Phone:</strong> {phone}</p>
-        <p><strong>Distance:</strong> {distance}</p>
+        <p><strong>Distance:</strong> {distance} km</p>
         <p><strong>Booking Count:</strong> {bookingCount}</p>
         <p><strong>Quantity:</strong> {quantity}</p>
         <p><strong>Distribution Hours:</strong> {hours.start} - {hours.end}</p>

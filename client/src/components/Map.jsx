@@ -20,7 +20,7 @@ let userPos;
 
 const Map = () => {
   const [map, setMap] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);
+  const [userLocation, setUserLocation] = useGlobalState('userLocation');
   const [selectedPOI, setSelectedPOI] = useState(null);
   const [directions, setDirections] = useGlobalState('directions');
   const [selectedMarker, setSelectedMarker] = useState(null);
@@ -66,22 +66,77 @@ const Map = () => {
     }
   }, []);
 
-
-  useEffect(() => {
-    async function fetchData() {
+  const fetchData = async () => {
+    try {
       let res = await fetchAllRestaurants();
+      let restaurants = res.restaurants;
       console.log(res);
       setFilteredRestaurants([]);
-      setRestaurants(res.restaurants);
+
+      let restaurantsWithDistances = await Promise.all(
+        restaurants.map(async (restaurant) => {
+          let destination = {
+            lat: parseFloat(restaurant.location.latitude),
+            lng: parseFloat(restaurant.location.longitude),
+          };
+
+          try {
+            let distance = await getDistanceRoute(userLocation, destination);
+            return {
+              ...restaurant,
+              distance: distance.value/1000,
+              distanceText: distance.text,
+            };
+          } catch (error) {
+            console.error('Error fetching route distance', error);
+            return restaurant;
+          }
+        })
+      );
+
+      // Sort restaurants by distance
+      restaurantsWithDistances.sort((a, b) => a.distance - b.distance);
+      console.log('Restaurants with distances');
+      console.log(restaurantsWithDistances);
+      setRestaurants(restaurantsWithDistances);
+
       setUpdateFilteredFlag(updateFilteredFlag + 1);
       setFilters({
         halal: false,
         vegetarian: false,
         userBooking: false,
       });
+    } catch (error) {
+      console.error('Error fetching restaurants', error);
     }
+  };
+
+  useEffect(() => {
     fetchData();
-  }, [ fetchAllRestaurantsFlag]);
+  }, [fetchAllRestaurantsFlag, userLocation]);
+
+  const getDistanceRoute = (origin, destination) => {
+  return new Promise((resolve, reject) => {
+    const directionsService = new window.google.maps.DirectionsService();
+    
+    directionsService.route(
+      {
+        origin: origin,
+        destination: destination,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === window.google.maps.DirectionsStatus.OK) {
+          const route = result.routes[0];
+          const distance = route.legs[0].distance;
+          resolve(distance);
+        } else {
+          reject(`Failed to get directions: ${status}`);
+        }
+      }
+    );
+  });
+};
 
 
   useEffect(() => {

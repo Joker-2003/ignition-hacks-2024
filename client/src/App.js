@@ -14,7 +14,8 @@ const initialState = { user: null ,
   directions: { driving: null, walking: null },
   fetchAllRestaurantsFlag: 0,
 directionDetails: '',
-travelMode: 'DRIVING',};
+travelMode: 'DRIVING',
+userLocation: {}};
 export const { useGlobalState } = createGlobalState(initialState);
 
 function App() {
