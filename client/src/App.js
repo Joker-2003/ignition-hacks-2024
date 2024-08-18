@@ -10,27 +10,29 @@ import Footer from './components/footer';
 import Layout from './components/layout';
 import AboutUs from './pages/aboutus';
 
-const initialState = { user: null , 
+const initialState = {
+  user: null,
   directions: { driving: null, walking: null },
   fetchAllRestaurantsFlag: 0,
-directionDetails: '',
-travelMode: 'DRIVING',
-userLocation: {}};
+  directionDetails: '',
+  travelMode: 'DRIVING',
+  userLocation: {}
+};
 export const { useGlobalState } = createGlobalState(initialState);
 
 function App() {
- 
+
 
 
   return (
     <div className="App">
       <Layout>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<AboutUs />} />
-        <Route path="/map" element={<Map />} />
-        <Route path ="/add-restaurant" element={<RestaurantSignUp />} />
-      </Routes>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/map" element={<Map />} />
+          <Route path="/add-restaurant" element={<RestaurantSignUp />} />
+        </Routes>
       </Layout>
     </div>
   );

@@ -34,6 +34,8 @@ const Map = () => {
     halal: false,
     vegetarian: false,
     userBooking: false,
+    bookings: false,
+    quantity: false,
   });
   const [restaurants, setRestaurants] = useState([]);
   const [user, setUser] = useGlobalState('user');
@@ -137,47 +139,39 @@ const Map = () => {
     );
   });
 };
+useEffect(() => {
+  console.log(filters);
+  console.log("res", restaurants);
 
+  let filtered = restaurants.filter((restaurant) => {
+    return (
+      (!filters.halal || restaurant.dietaryOptions.isHalal) &&
+      (!filters.vegetarian || restaurant.dietaryOptions.isVegetarian) &&
+      (!filters.userBooking || (loggedIn && user && user.bookings && user.bookings.includes(restaurant.id))) &&
+      (!filters.bookings || restaurant.bookingCount > 0) &&
+      (!filters.quantity || restaurant.quantity > 0)
+    );
+  });
 
-  useEffect(() => {
-    console.log(filters);
-    console.log("res", restaurants);
-    if (filters.halal || filters.vegetarian || filters.userBooking) {
-      let filtered = restaurants.filter((restaurant) => {
-        return (
-          (!filters.halal || restaurant.dietaryOptions.isHalal) &&
-          (!filters.vegetarian || restaurant.dietaryOptions.isVegetarian) &&
-          (!filters.userBooking || (loggedIn && user && user.bookings && user.bookings.includes(restaurant.id)))
-        );
-      });
-      
-      filtered.forEach((restaurant) => {
-        generateMarkers(restaurant, setMarkers);
-        if (loggedIn && user && user.bookings && user.bookings.includes(restaurant.id)) {
-          restaurant.color = 'green';
-          restaurant.booked = true;
-        }
-      }
-      
-      );
-      setFilteredRestaurants(filtered);
+  if (filters.bookings) {
+    filtered.sort((a, b) => b.bookingCount - a.bookingCount);
+  } else if (filters.quantity) {
+    filtered.sort((a, b) => b.quantity - a.quantity);
+  }
+
+  filtered.forEach((restaurant) => {
+    generateMarkers(restaurant, setMarkers);
+    if (loggedIn && user && user.bookings && user.bookings.includes(restaurant.id)) {
+      restaurant.color = 'green';
+      restaurant.booked = true;
     }
-    else {
-      
-      restaurants.forEach((restaurant) => {
-        generateMarkers(restaurant, setMarkers);
-        console.log(user);
-        if (loggedIn && user && user.bookings && user.bookings.includes(restaurant.id)) {
-          restaurant.color = 'green';
-          restaurant.booked = true;
-        }
-      }
-      
-      );
-      setFilteredRestaurants(restaurants);
-    }
-    console.log(filteredRestaurants);
-  }, [filters, restaurants, updateFilteredFlag]);
+  });
+
+  setFilteredRestaurants(filtered);
+
+  console.log(filteredRestaurants);
+}, [filters, restaurants, updateFilteredFlag]);
+
 
   useEffect(() => {
     async function fetchData() {
@@ -419,6 +413,22 @@ const Map = () => {
                   onChange={() => handleFilterChange('vegetarian')}
                 />
                 Vegetarian
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={filters.bookings}
+                  onChange={() => handleFilterChange('bookings')}
+                />
+                Bookings
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={filters.quantity}
+                  onChange={() => handleFilterChange('quantity')}
+                />
+                Quantity
               </label>
               {loggedIn &&
                 <label>
