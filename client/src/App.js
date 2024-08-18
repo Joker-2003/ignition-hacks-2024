@@ -10,7 +10,11 @@ import Footer from './components/footer';
 import Layout from './components/layout';
 import AboutUs from './pages/aboutus';
 
-const initialState = { user: null };
+const initialState = { user: null , 
+  directions: { driving: null, walking: null },
+  fetchAllRestaurantsFlag: 0,
+directionDetails: '',
+travelMode: 'DRIVING',};
 export const { useGlobalState } = createGlobalState(initialState);
 
 function App() {

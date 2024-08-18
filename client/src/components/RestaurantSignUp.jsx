@@ -34,6 +34,7 @@ export default function RestaurantSignUp() {
   const autocompleteRef = useRef(null);
 
   const [disableSubmit, setDisableSubmit] = useState(false);
+    const [travelMode, setTravelMode] = useGlobalState('travelMode');
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_API,

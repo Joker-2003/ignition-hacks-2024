@@ -5,6 +5,7 @@ import { GoogleLogin, GoogleLogout } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 import { useGlobalState } from '../App';
 import { bookSlot, fetchAllRestaurants, fetchUser, removeBooking, UserLogin } from '../api/api';
+import RestaurantBrief from './RestaurantBrief';
 
 const markerColors = [
   'red', 'blue', 'green', 'purple', 'orange',
@@ -21,11 +22,11 @@ const Map = () => {
   const [map, setMap] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [selectedPOI, setSelectedPOI] = useState(null);
-  const [directions, setDirections] = useState({ driving: null, walking: null });
+  const [directions, setDirections] = useGlobalState('directions');
   const [selectedMarker, setSelectedMarker] = useState(null);
-  const [directionDetails, setDirectionDetails] = useState('');
+  const [directionDetails, setDirectionDetails] = useGlobalState('directionDetails');
   const [showCircles, setShowCircles] = useState(true);
-  const [travelMode, setTravelMode] = useState('DRIVING');
+  const [travelMode, setTravelMode] = useGlobalState('travelMode');
   const [circles, setCircles] = useState([]);
   const [loggedIn, setLoggedIn] = useState(false);
   const [disableLogin, setDisableLogin] = useState(false);
@@ -38,7 +39,7 @@ const Map = () => {
   const [user, setUser] = useGlobalState('user');
   const [filteredRestaurants, setFilteredRestaurants] = useState([]);
   const [markers, setMarkers] = useState([]);
-  const [fetchAllRestaurantsFlag, setFetchAllRestaurantsFlag] = useState(0);
+  const [fetchAllRestaurantsFlag, setFetchAllRestaurantsFlag] = useGlobalState('fetchAllRestaurantsFlag');
   const [updateFilteredFlag, setUpdateFilteredFlag] = useState(0);
 
   const mapRef = useRef(null);
@@ -124,10 +125,15 @@ const Map = () => {
   }, [filters, restaurants, updateFilteredFlag]);
 
   useEffect(() => {
+    async function fetchData() {
     if (loggedIn) {
-      let res = fetchUser(user.id);
+      let res = await fetchUser(user.id);
+      console.log(res);
       setUser(res.user);
     }
+    
+    }
+    fetchData();
   }, [fetchAllRestaurantsFlag])
 
   const onLoad = (map) => {
@@ -303,148 +309,6 @@ const Map = () => {
     }
   }
 
-
-  const RestaurantCardBrief = ({ formData }) => {
-    const {
-      id,
-      name,
-      address,
-      cuisine,
-      location,
-      phone,
-      distance,
-      bookingCount,
-      quantity,
-      hours, booked
-    } = formData;
-
-    console.log(id, name, address, cuisine, location, phone, distance, bookingCount, quantity, hours, booked);
-
-    const [forceUpdate, setForceUpdate] = useState(false);
-    const handleDirectionsClick = () => {
-      if (userLocation && location) {
-        const directionsService = new window.google.maps.DirectionsService();
-
-        const givenLocation = {
-          lat: parseFloat(location.latitude),
-          lng: parseFloat(location.longitude),
-        };
-        // Fetch driving route
-        directionsService.route(
-          {
-            origin: userLocation,
-            destination: givenLocation,
-            travelMode: window.google.maps.TravelMode.DRIVING,
-          },
-          (result, status) => {
-            if (status === window.google.maps.DirectionsStatus.OK) {
-              setDirections((prev) => ({
-                ...prev,
-                driving: result
-              }));
-              if (travelMode === 'DRIVING') {
-                const { distance, duration } = result.routes[0].legs[0];
-                setDirectionDetails(`Driving - Distance: ${distance.text}, Duration: ${duration.text}`);
-              }
-            } else {
-              console.error(`Error fetching driving directions ${result}`);
-            }
-          }
-        );
-
-
-        directionsService.route(
-          {
-            origin: userLocation,
-            destination: givenLocation,
-            travelMode: window.google.maps.TravelMode.WALKING,
-          },
-          (result, status) => {
-            if (status === window.google.maps.DirectionsStatus.OK) {
-              setDirections((prev) => ({
-                ...prev,
-                walking: result
-              }));
-              if (travelMode === 'WALKING') {
-                const { distance, duration } = result.routes[0].legs[0];
-                setDirectionDetails(`Walking - Distance: ${distance.text}, Duration: ${duration.text}`);
-              }
-            } else {
-              console.error(`Error fetching walking directions ${result}`);
-            }
-          }
-        );
-      }
-    }
-
-    const handleCancelBooking = async () => {
-      if (loggedIn) {
-        console.log("Cancel Booking");
-        let res = await removeBooking(user.id, id);
-        console.log(res);
-        setFetchAllRestaurantsFlag(fetchAllRestaurantsFlag + 1);
-      }
-      else {
-        await handleLogin();
-        console.log("Cancel Booking");
-        setForceUpdate(!forceUpdate);
-      }
-    };
-
-    const handleBookNow = async () => {
-      if (loggedIn) {
-        console.log("Book Now");
-        try {
-          let res = await bookSlot(user.id, id);
-          console.log(res);
-          setFetchAllRestaurantsFlag(fetchAllRestaurantsFlag + 1);
-        }
-        catch (err) {
-          console.log(err);
-        }
-
-      }
-      else {
-        await handleLogin();
-        console.log("Book Now");
-      }
-      setForceUpdate(!forceUpdate);
-    };
-
-    return (
-      <div className="restaurant-card-brief">
-        <h2 className="restaurant-card-title">{name}</h2>
-        <p><strong>Address:</strong> {address}</p>
-        <p><strong>Cuisine:</strong> {cuisine}</p>
-        <p><strong>Phone:</strong> {phone}</p>
-        <p><strong>Distance:</strong> {distance}</p>
-        <p><strong>Booking Count:</strong> {bookingCount}</p>
-        <p><strong>Quantity:</strong> {quantity}</p>
-        <p><strong>Distribution Hours:</strong> {hours.start} - {hours.end}</p>
-        <div className="buttons">
-          {booked ?
-            <button title={!loggedIn ? 'Login to cancel' : ''} disabled={!loggedIn} onClick={handleCancelBooking} className="btn btn-danger">Cancel Booking</button>
-            :
-            (
-              <div style={{ position: 'relative', display: 'inline-block' }}>
-                <button
-                  onClick={handleBookNow}
-                  disabled={!loggedIn}
-                  className="btn btn-primary"
-                  aria-label="Book Now"
-                >
-                  {loggedIn ? "Book Now" : "Login to Book"}
-                </button>
-
-              </div>
-            )
-          }
-          < button className="btn btn-secondary" onClick={handleDirectionsClick}>Get Directions</button>
-        </div>
-      </div >
-    );
-  };
-
   return (
     <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_API} >
       <div className="panel">
@@ -475,8 +339,8 @@ const Map = () => {
           <div><span style={{ backgroundColor: '#0000ff' }}></span> 4-10km</div>
         </div>
         <div className="restaurant-list">
-          {filteredRestaurants.length && filteredRestaurants.map((restaurant) => (
-            <RestaurantCardBrief key={restaurant.id} formData={restaurant} />
+          {filteredRestaurants.length && filteredRestaurants.map((restaurant,idx) => (
+            <RestaurantBrief key={idx} formData={restaurant} userLocation={userLocation}/>
           ))}
         </div>
       </div>
@@ -536,9 +400,9 @@ const Map = () => {
           }
         >
           {userLocation && <Marker position={userLocation} label="You" />}
-          {markers.map((marker) => (
+          {markers.map((marker,idx) => (
             <Marker
-              key={marker.id}
+              key={`${marker.id}-${idx}`}
               position={marker.position}
               label={{
                 text: marker.label,
