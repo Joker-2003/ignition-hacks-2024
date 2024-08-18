@@ -25,7 +25,22 @@
 .restaurant-card li {
     margin: 4px 0;
 }
-
+.restaurant-card-brief button{
+	padding: 10px 20px;
+	background-color: #4285f4;
+	color: white;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	margin-left: 10px;
+}
 .restaurant-card-brief {
     border-width: 2px;
+	border: 2px solid #ddd;
+    border-radius: 8px;
+    max-width: 600px;
+    margin: 16px auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+
 }

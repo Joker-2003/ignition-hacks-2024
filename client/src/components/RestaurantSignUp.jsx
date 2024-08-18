@@ -6,6 +6,7 @@ import { useGlobalState } from '../App';
 import { useNavigate } from 'react-router-dom';
 
 const libraries = ['places'];
+
 export default function RestaurantSignUp() {
   const [formData, setFormData] = useState({
     id: '',
@@ -24,17 +25,16 @@ export default function RestaurantSignUp() {
 
   const navigate = useNavigate();
   const [user, setUser] = useGlobalState('user');
+
   useEffect(() => {
-	
-	if (!user) {
-		navigate('/');
-	}
-  },[]);
+    if (!user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const autocompleteRef = useRef(null);
 
   const [disableSubmit, setDisableSubmit] = useState(false);
-    const [travelMode, setTravelMode] = useGlobalState('travelMode');
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_API,
@@ -47,7 +47,7 @@ export default function RestaurantSignUp() {
       const { lat, lng } = place.geometry.location;
       setFormData((prevData) => ({
         ...prevData,
-        address: place.formatted_address,  // Update address field with the selected place's formatted address
+        address: place.formatted_address,
         location: {
           latitude: lat(),
           longitude: lng(),
@@ -93,31 +93,18 @@ export default function RestaurantSignUp() {
   };
 
   const handleSubmit = async (e) => {
-	setDisableSubmit(true);
+    setDisableSubmit(true);
     e.preventDefault();
     console.log('Restaurant added:', formData);
-	try{
-    let res =  await addRestaurant(formData);
-	console.log(res);
-	}
-	catch(err){
-		console.log(err);
-	}
-    // setFormData({
-    //   id: '',
-    //   userid: '',
-    //   name: '',
-    //   location: { longitude: '', latitude: '' },
-    //   cuisine: '',
-    //   phone: '',
-    //   bookingCount: 0,
-    //   dietaryOptions: { isHalal: false, isVegetarian: false },
-    //   quantity: 0,
-    //   hours: { start: '', end: '' },
-    //   menu: [{ name: '' }],
-    //   address: '',
-    // });
-	setDisableSubmit(false);
+    try {
+      let res = await addRestaurant(formData);
+      console.log(res);
+      // Handle success case
+    } catch (err) {
+      console.error(err);
+      // Handle error case
+    }
+    setDisableSubmit(false);
   };
 
   if (loadError) return <div>Error loading Google Maps</div>;
@@ -125,13 +112,7 @@ export default function RestaurantSignUp() {
 
   return (
     <div className="container">
-      <nav className="navbar">
-        <a href="/" className="navbar-brand">RestaurantApp</a>
-        <button className="home-button" onClick={() => window.location.href = '/'}>
-          Home
-        </button>
-      </nav>
-
+      <h1 style={{fontSize:"30px"}}>Restaurant Sign Up</h1>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Restaurant Name:</label>
@@ -140,10 +121,7 @@ export default function RestaurantSignUp() {
 
         <div className="form-group">
           <label>Address:</label>
-          <Autocomplete
-            onLoad={(ref) => (autocompleteRef.current = ref)}
-            onPlaceChanged={onPlaceChanged}
-          >
+          <Autocomplete onLoad={(ref) => (autocompleteRef.current = ref)} onPlaceChanged={onPlaceChanged}>
             <input
               type="text"
               name="address"
@@ -210,29 +188,32 @@ export default function RestaurantSignUp() {
           />
         </div>
 
-        <div className="form-group">
-          <label>
-            <input
-              type="checkbox"
-              name="dietaryOptions.isHalal"
-              checked={formData.dietaryOptions.isHalal}
-              onChange={handleInputChange}
-            />
-            Halal
-          </label>
-        </div>
+        <fieldset>
+          <legend>Dietary Restrictions</legend>
+          <div className="form-group">
+            <label>
+              <input
+                type="checkbox"
+                name="dietaryOptions.isHalal"
+                checked={formData.dietaryOptions.isHalal}
+                onChange={handleInputChange}
+              />
+              Halal
+            </label>
+          </div>
 
-        <div className="form-group">
-          <label>
-            <input
-              type="checkbox"
-              name="dietaryOptions.isVegetarian"
-              checked={formData.dietaryOptions.isVegetarian}
-              onChange={handleInputChange}
-            />
-            Vegetarian
-          </label>
-        </div>
+          <div className="form-group">
+            <label>
+              <input
+                type="checkbox"
+                name="dietaryOptions.isVegetarian"
+                checked={formData.dietaryOptions.isVegetarian}
+                onChange={handleInputChange}
+              />
+              Vegetarian
+            </label>
+          </div>
+        </fieldset>
 
         <div className="form-group">
           <label>Quantity:</label>
@@ -275,6 +256,7 @@ export default function RestaurantSignUp() {
                 type="text"
                 value={item.name}
                 onChange={(e) => handleMenuChange(index, e.target.value)}
+                placeholder="Menu item name"
                 required
               />
             </div>
@@ -284,9 +266,12 @@ export default function RestaurantSignUp() {
           </button>
         </div>
 
-        <button disabled={disableSubmit} type="submit" className="submit-btn">Save Restaurant</button>
+        <div className="form-group">
+          <button type="submit" className="submit-btn" disabled={disableSubmit}>
+            Submit
+          </button>
+        </div>
       </form>
-      
     </div>
   );
 }
