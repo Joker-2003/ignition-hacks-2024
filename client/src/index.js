@@ -4,13 +4,17 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import {BrowserRouter} from 'react-router-dom';
+import { ChakraProvider } from '@chakra-ui/react';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 
 ReactDOM.render(
 
   <React.StrictMode>
     <BrowserRouter>
-     
+    <ChakraProvider>
         <App />
+    </ChakraProvider>
    
     </BrowserRouter>
 
